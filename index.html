@@ -1,0 +1,730 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Monitor Abóbora Angola</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root {
+  --terra: #3d1f0a;
+  --verde: #2d6a4f;
+  --verde2: #40916c;
+  --verde3: #74c69d;
+  --verde-bg: #d8f3dc;
+  --amarelo: #f4a261;
+  --amarelo2: #e9c46a;
+  --laranja: #e76f51;
+  --creme: #fefae0;
+  --creme2: #f5ede0;
+  --azul: #264653;
+  --roxo: #6d4c9e;
+  --branco: #ffffff;
+  --cinza: #f0ebe3;
+  --cinza2: #d6cfc7;
+  --sombra: 0 4px 20px rgba(61,31,10,0.12);
+  --radius: 16px;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  background: var(--creme2);
+  font-family: 'Nunito', sans-serif;
+  min-height: 100vh;
+  background-image:
+    radial-gradient(ellipse at 10% 0%, rgba(116,198,157,0.15) 0%, transparent 40%),
+    radial-gradient(ellipse at 90% 100%, rgba(244,162,97,0.15) 0%, transparent 40%);
+}
+
+/* LOADING */
+.loading-screen {
+  position: fixed; inset: 0;
+  background: var(--terra);
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  z-index: 200;
+  transition: opacity 0.4s;
+}
+.loading-screen.hide { opacity: 0; pointer-events: none; }
+.loading-logo {
+  font-family: 'Bebas Neue', cursive;
+  font-size: 3rem;
+  color: var(--amarelo2);
+  letter-spacing: 3px;
+  margin-bottom: 8px;
+}
+.loading-sub { color: var(--verde3); font-size: 0.8rem; font-weight: 700; letter-spacing: 1px; margin-bottom: 28px; }
+.spinner {
+  width: 36px; height: 36px;
+  border: 3px solid rgba(255,255,255,0.1);
+  border-top-color: var(--verde3);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* HEADER */
+.header { background: var(--terra); padding: 20px 16px 0; position: relative; overflow: hidden; }
+.header::before {
+  content: '';
+  position: absolute; inset: 0;
+  background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none'%3E%3Cg fill='%23ffffff' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+}
+.header-top { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 16px; position: relative; }
+.header h1 { font-family: 'Bebas Neue', cursive; font-size: clamp(2rem,8vw,3rem); color: var(--amarelo2); letter-spacing: 2px; line-height: 1; }
+.header h1 span { color: var(--verde3); }
+.dap-badge-big { background: var(--amarelo); color: var(--terra); font-family: 'Bebas Neue', cursive; font-size: 1.8rem; padding: 8px 16px; border-radius: 12px; text-align: center; line-height: 1; min-width: 90px; }
+.dap-badge-big small { display: block; font-family: 'Nunito', sans-serif; font-size: 0.6rem; font-weight: 800; letter-spacing: 1px; text-transform: uppercase; }
+.header-pills { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; position: relative; }
+.hpill { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.15); color: #c8d8d0; font-size: 0.7rem; font-weight: 700; padding: 4px 10px; border-radius: 20px; letter-spacing: 0.5px; }
+.tabs { display: flex; background: rgba(0,0,0,0.3); overflow-x: auto; }
+.tab { flex: 1; min-width: 70px; padding: 12px 8px; text-align: center; font-size: 0.65rem; font-weight: 800; color: rgba(255,255,255,0.5); cursor: pointer; transition: all 0.2s; letter-spacing: 0.5px; text-transform: uppercase; border-bottom: 3px solid transparent; white-space: nowrap; }
+.tab.active { color: var(--amarelo2); border-bottom-color: var(--amarelo2); background: rgba(255,255,255,0.05); }
+.tab-icon { display: block; font-size: 1.1rem; margin-bottom: 2px; }
+
+.content { padding: 16px; }
+.panel { display: none; }
+.panel.active { display: block; }
+
+.card { background: var(--branco); border-radius: var(--radius); box-shadow: var(--sombra); margin-bottom: 14px; overflow: hidden; }
+.card-body { padding: 0 16px 16px; }
+
+.fase-atual { background: linear-gradient(135deg, var(--verde), var(--azul)); border-radius: 14px; padding: 16px; color: white; margin-bottom: 14px; position: relative; overflow: hidden; }
+.fase-atual::after { content: attr(data-emoji); position: absolute; right: 10px; bottom: -5px; font-size: 4rem; opacity: 0.15; }
+.fase-atual .label { font-size: 0.65rem; font-weight: 800; letter-spacing: 1px; text-transform: uppercase; opacity: 0.7; margin-bottom: 4px; }
+.fase-atual .nome { font-family: 'Bebas Neue', cursive; font-size: 1.6rem; letter-spacing: 1px; line-height: 1; }
+.fase-atual .desc { font-size: 0.78rem; opacity: 0.8; margin-top: 6px; line-height: 1.4; }
+.alertas { margin-top: 10px; display: flex; flex-direction: column; gap: 6px; }
+.alerta-item { background: rgba(255,255,255,0.15); border-radius: 8px; padding: 8px 10px; font-size: 0.75rem; font-weight: 700; display: flex; align-items: center; gap: 6px; }
+
+.progress-wrap { margin: 14px 0 8px; }
+.progress-label { display: flex; justify-content: space-between; font-size: 0.72rem; font-weight: 700; color: #888; margin-bottom: 6px; }
+.progress-bar { height: 10px; background: var(--cinza); border-radius: 10px; overflow: hidden; }
+.progress-fill { height: 100%; background: linear-gradient(90deg, var(--verde), var(--verde3)); border-radius: 10px; transition: width 0.5s ease; }
+
+.stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; }
+.stat-card { background: var(--branco); border-radius: 14px; padding: 14px; box-shadow: var(--sombra); text-align: center; }
+.stat-val { font-family: 'Bebas Neue', cursive; font-size: 2rem; letter-spacing: 1px; line-height: 1; margin-bottom: 4px; }
+.stat-label { font-size: 0.65rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.8px; color: #aaa; }
+
+.section-title { font-family: 'Bebas Neue', cursive; font-size: 1rem; letter-spacing: 2px; color: var(--terra); margin-bottom: 10px; margin-top: 4px; display: flex; align-items: center; gap: 6px; }
+
+.cal-list { display: flex; flex-direction: column; gap: 8px; }
+.cal-item { border-radius: 12px; padding: 12px 14px; border-left: 4px solid; position: relative; transition: transform 0.15s; animation: fadeUp 0.3s ease both; }
+.cal-item:active { transform: scale(0.98); }
+.cal-dap { font-family: 'Bebas Neue', cursive; font-size: 0.85rem; letter-spacing: 1px; margin-bottom: 2px; }
+.cal-produto { font-size: 0.9rem; font-weight: 800; }
+.cal-detalhe { font-size: 0.72rem; margin-top: 3px; opacity: 0.75; }
+.cal-check { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); width: 28px; height: 28px; border-radius: 50%; border: 2px solid currentColor; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 0.9rem; transition: all 0.2s; opacity: 0.5; }
+.cal-item.done .cal-check { opacity: 1; background: currentColor; }
+.cal-item.done .cal-check::after { content: '✓'; color: white; font-weight: 900; }
+.cal-item.done { opacity: 0.6; }
+.cal-item.atual { box-shadow: 0 0 0 2px currentColor; opacity: 1 !important; }
+.tipo-adub { background: #f0faf4; border-color: var(--verde); color: var(--verde); }
+.tipo-ins  { background: #fff8f0; border-color: var(--amarelo); color: #b5760a; }
+.tipo-fung { background: #f0f4ff; border-color: #3b82f6; color: #1d4ed8; }
+.tipo-fol  { background: #faf0ff; border-color: var(--roxo); color: var(--roxo); }
+.tipo-col  { background: #f0faf4; border-color: var(--verde3); color: var(--verde); }
+
+.reg-form { display: flex; flex-direction: column; gap: 10px; }
+.field-group label { display: block; font-size: 0.65rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.8px; color: #aaa; margin-bottom: 4px; }
+.field-group input, .field-group select, .field-group textarea { width: 100%; padding: 10px 12px; border: 1.5px solid var(--cinza2); border-radius: 10px; font-family: 'Nunito', sans-serif; font-size: 0.85rem; font-weight: 600; color: var(--terra); background: var(--creme); -webkit-appearance: none; }
+.field-group textarea { resize: vertical; min-height: 70px; }
+.field-group input:focus, .field-group select:focus, .field-group textarea:focus { outline: none; border-color: var(--verde2); }
+.fields-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.fields-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
+
+.btn-salvar { width: 100%; padding: 14px; background: var(--verde); color: white; border: none; border-radius: 12px; font-family: 'Bebas Neue', cursive; font-size: 1.1rem; letter-spacing: 2px; cursor: pointer; box-shadow: 0 4px 16px rgba(45,106,79,0.35); transition: all 0.2s; margin-top: 4px; }
+.btn-salvar:active { transform: scale(0.97); }
+.btn-salvar:disabled { opacity: 0.6; cursor: not-allowed; }
+
+.historico-list { display: flex; flex-direction: column; gap: 8px; }
+.hist-item { background: var(--creme); border-radius: 12px; padding: 12px 14px; border-left: 3px solid var(--verde2); position: relative; animation: fadeUp 0.3s ease both; }
+.hist-topo { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 6px; }
+.hist-data { font-size: 0.7rem; font-weight: 800; color: var(--verde2); text-transform: uppercase; letter-spacing: 0.5px; }
+.hist-dap { background: var(--verde2); color: white; font-size: 0.65rem; font-weight: 800; padding: 2px 7px; border-radius: 10px; }
+.hist-tipo { display: inline-block; font-size: 0.65rem; font-weight: 800; padding: 2px 8px; border-radius: 8px; margin-bottom: 5px; text-transform: uppercase; letter-spacing: 0.5px; }
+.hist-produto { font-size: 0.9rem; font-weight: 800; color: var(--terra); }
+.hist-detalhe { font-size: 0.75rem; color: #888; margin-top: 3px; }
+.hist-del { position: absolute; right: 10px; bottom: 10px; background: none; border: none; color: #ccc; font-size: 1rem; cursor: pointer; padding: 4px; }
+
+.badge { display: inline-flex; align-items: center; gap: 4px; padding: 3px 8px; border-radius: 8px; font-size: 0.65rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; }
+.badge-verde  { background: var(--verde-bg); color: var(--verde); }
+.badge-amarelo{ background: #fff8e0; color: #b5760a; }
+.badge-laranja{ background: #fff0e8; color: var(--laranja); }
+.badge-roxo   { background: #f3e8ff; color: var(--roxo); }
+.badge-azul   { background: #e8f4ff; color: var(--azul); }
+
+.insumo-card { background: var(--creme); border-radius: 12px; padding: 12px 14px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; }
+.insumo-nome { font-size: 0.85rem; font-weight: 800; color: var(--terra); }
+.insumo-tipo { font-size: 0.65rem; color: #aaa; font-weight: 700; text-transform: uppercase; margin-top: 2px; }
+.insumo-qtd  { font-family: 'Bebas Neue', cursive; font-size: 1.2rem; color: var(--verde); letter-spacing: 1px; text-align: right; }
+.insumo-un   { font-size: 0.65rem; color: #aaa; font-weight: 700; }
+
+.sep { height: 1px; background: var(--cinza); margin: 12px 0; }
+
+.toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(80px); background: var(--terra); color: white; padding: 12px 20px; border-radius: 12px; font-size: 0.85rem; font-weight: 700; box-shadow: 0 8px 24px rgba(0,0,0,0.3); transition: transform 0.3s cubic-bezier(0.34,1.56,0.64,1); z-index: 999; white-space: nowrap; }
+.toast.show { transform: translateX(-50%) translateY(0); }
+
+.setup-overlay { position: fixed; inset: 0; background: rgba(61,31,10,0.95); z-index: 100; display: flex; align-items: center; justify-content: center; padding: 24px; }
+.setup-box { background: var(--creme); border-radius: 24px; padding: 28px 22px; width: 100%; max-width: 360px; animation: popIn 0.4s cubic-bezier(0.34,1.56,0.64,1); }
+.setup-box h2 { font-family: 'Bebas Neue', cursive; font-size: 1.8rem; color: var(--terra); letter-spacing: 2px; margin-bottom: 4px; }
+.setup-box p { font-size: 0.82rem; color: #888; margin-bottom: 20px; line-height: 1.5; }
+.setup-fields { display: flex; flex-direction: column; gap: 12px; }
+.setup-fields label { display: block; font-size: 0.65rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.8px; color: #aaa; margin-bottom: 4px; }
+.setup-fields input { width: 100%; padding: 12px 14px; border: 2px solid var(--cinza2); border-radius: 12px; font-family: 'Nunito', sans-serif; font-size: 1rem; font-weight: 700; color: var(--terra); background: white; }
+.setup-fields input:focus { outline: none; border-color: var(--verde2); }
+.btn-comecar { width: 100%; margin-top: 20px; padding: 16px; background: var(--verde); color: white; border: none; border-radius: 14px; font-family: 'Bebas Neue', cursive; font-size: 1.3rem; letter-spacing: 3px; cursor: pointer; box-shadow: 0 6px 20px rgba(45,106,79,0.4); }
+.btn-comecar:disabled { opacity: 0.6; }
+
+.empty-state { text-align: center; padding: 32px 16px; color: #bbb; }
+.empty-state .icon { font-size: 3rem; margin-bottom: 10px; }
+.empty-state p { font-size: 0.85rem; font-weight: 700; }
+.scroll-area { max-height: 65vh; overflow-y: auto; padding-bottom: 8px; }
+
+@keyframes fadeUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes popIn { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+</style>
+</head>
+<body>
+
+<!-- LOADING -->
+<div class="loading-screen" id="loadingScreen">
+  <div class="loading-logo">🎃 Angola</div>
+  <div class="loading-sub">Monitor de Lavoura</div>
+  <div class="spinner"></div>
+</div>
+
+<!-- SETUP -->
+<div class="setup-overlay" id="setupOverlay" style="display:none">
+  <div class="setup-box">
+    <h2>🎃 Monitor Angola</h2>
+    <p>Configure sua lavoura para começar o acompanhamento completo.</p>
+    <div class="setup-fields">
+      <div><label>Data do plantio</label><input type="date" id="setupData"></div>
+      <div><label>Área (ha)</label><input type="number" id="setupArea" value="1.5" step="0.1"></div>
+      <div><label>Número de covas</label><input type="number" id="setupCovas" value="1875"></div>
+      <div><label>Espaçamento</label><input type="text" id="setupEspaco" value="4 x 2 m"></div>
+    </div>
+    <button class="btn-comecar" id="btnComecar" onclick="iniciar()">🌱 INICIAR MONITORAMENTO</button>
+  </div>
+</div>
+
+<!-- HEADER -->
+<div class="header">
+  <div class="header-top">
+    <div>
+      <div style="font-size:0.65rem;font-weight:800;letter-spacing:2px;color:var(--verde3);text-transform:uppercase;margin-bottom:2px;">Abóbora</div>
+      <h1>ANGOLA<br><span>Monitor</span></h1>
+    </div>
+    <div class="dap-badge-big"><small>DAP</small><span id="dapNum">—</span></div>
+  </div>
+  <div class="header-pills">
+    <span class="hpill" id="pillArea">1,5 ha</span>
+    <span class="hpill" id="pillCovas">1.875 covas</span>
+    <span class="hpill" id="pillEspaco">4x2m</span>
+    <span class="hpill" id="pillPlantio">Plantio: —</span>
+    <span class="hpill" id="pillColheita">Colheita: ~dia 100</span>
+  </div>
+  <div class="tabs">
+    <div class="tab active" onclick="showTab('inicio')"><span class="tab-icon">🏠</span>Início</div>
+    <div class="tab" onclick="showTab('calendario')"><span class="tab-icon">📅</span>Calendário</div>
+    <div class="tab" onclick="showTab('registro')"><span class="tab-icon">✏️</span>Registrar</div>
+    <div class="tab" onclick="showTab('historico')"><span class="tab-icon">📋</span>Histórico</div>
+    <div class="tab" onclick="showTab('insumos')"><span class="tab-icon">🧪</span>Insumos</div>
+  </div>
+</div>
+
+<div class="content">
+
+  <!-- INÍCIO -->
+  <div class="panel active" id="panel-inicio">
+    <div class="fase-atual" id="faseAtual" data-emoji="🌱">
+      <div class="label">📍 Fase atual</div>
+      <div class="nome" id="faseNome">Carregando...</div>
+      <div class="desc" id="faseDesc"></div>
+      <div class="alertas" id="faseAlertas"></div>
+    </div>
+    <div class="stats-grid">
+      <div class="stat-card"><div class="stat-val" id="statDap" style="color:var(--verde)">—</div><div class="stat-label">Dias após plantio</div></div>
+      <div class="stat-card"><div class="stat-val" id="statRestam" style="color:var(--amarelo)">—</div><div class="stat-label">Dias p/ colheita</div></div>
+      <div class="stat-card"><div class="stat-val" id="statRegistros" style="color:var(--roxo)">0</div><div class="stat-label">Registros feitos</div></div>
+      <div class="stat-card"><div class="stat-val" id="statPulv" style="color:var(--laranja)">0</div><div class="stat-label">Pulverizações</div></div>
+    </div>
+    <div class="progress-wrap">
+      <div class="progress-label"><span>Progresso do ciclo</span><span id="progressPct">0%</span></div>
+      <div class="progress-bar"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
+    </div>
+    <div class="section-title">⚡ Próximas ações</div>
+    <div id="proximasAcoes"></div>
+    <div class="sep"></div>
+    <div style="text-align:center">
+      <button onclick="resetar()" style="background:none;border:none;color:#ccc;font-size:0.75rem;font-weight:700;cursor:pointer;padding:8px;">⚙️ Reconfigurar lavoura</button>
+    </div>
+  </div>
+
+  <!-- CALENDÁRIO -->
+  <div class="panel" id="panel-calendario">
+    <div class="section-title">📅 Calendário de Manejo</div>
+    <p style="font-size:0.75rem;color:#aaa;margin-bottom:12px;font-weight:600;">Toque no ✓ para marcar como realizado</p>
+    <div class="cal-list scroll-area" id="calList"></div>
+  </div>
+
+  <!-- REGISTRO -->
+  <div class="panel" id="panel-registro">
+    <div class="section-title">✏️ Novo Registro</div>
+    <div class="card">
+      <div class="card-body" style="padding-top:16px;">
+        <div class="reg-form">
+          <div class="fields-2">
+            <div class="field-group"><label>Data</label><input type="date" id="regData"></div>
+            <div class="field-group"><label>DAP</label><input type="number" id="regDap" placeholder="Ex: 20" min="0"></div>
+          </div>
+          <div class="field-group">
+            <label>Tipo de registro</label>
+            <select id="regTipo">
+              <option value="">Selecione...</option>
+              <option value="Adubação Solo">🟢 Adubação Solo</option>
+              <option value="Adubação Foliar">🟣 Adubação Foliar</option>
+              <option value="Pulverização - Inseticida">🟠 Pulverização - Inseticida</option>
+              <option value="Pulverização - Fungicida">🔵 Pulverização - Fungicida</option>
+              <option value="Irrigação">💧 Irrigação</option>
+              <option value="Capina">🌿 Capina</option>
+              <option value="Observação">📝 Observação</option>
+              <option value="Colheita">🎃 Colheita</option>
+              <option value="Venda">💰 Venda</option>
+              <option value="Outro">⚙️ Outro</option>
+            </select>
+          </div>
+          <div class="field-group"><label>Produto / Atividade</label><input type="text" id="regProduto" placeholder="Ex: Amistar WG, Ureia..."></div>
+          <div class="fields-3">
+            <div class="field-group"><label>Quantidade</label><input type="number" id="regQtd" placeholder="0" step="0.1"></div>
+            <div class="field-group">
+              <label>Unidade</label>
+              <select id="regUnidade">
+                <option value="ml">ml</option>
+                <option value="L">L</option>
+                <option value="g">g</option>
+                <option value="kg">kg</option>
+                <option value="sacos">sacos</option>
+                <option value="cx">cx</option>
+                <option value="—">—</option>
+              </select>
+            </div>
+            <div class="field-group"><label>Valor (R$)</label><input type="number" id="regValor" placeholder="0,00" step="0.01"></div>
+          </div>
+          <div class="field-group"><label>Observações</label><textarea id="regObs" placeholder="Condições, pragas observadas..."></textarea></div>
+          <button class="btn-salvar" id="btnSalvar" onclick="salvarRegistro()">💾 SALVAR REGISTRO</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- HISTÓRICO -->
+  <div class="panel" id="panel-historico">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+      <div class="section-title" style="margin:0">📋 Histórico</div>
+      <select id="filtroTipo" onchange="renderHistorico()" style="font-size:0.75rem;font-weight:700;padding:6px 10px;border:1.5px solid var(--cinza2);border-radius:8px;font-family:'Nunito',sans-serif;background:var(--creme);color:var(--terra);">
+        <option value="">Todos</option>
+        <option value="Adubação Solo">Adubação Solo</option>
+        <option value="Adubação Foliar">Foliar</option>
+        <option value="Pulverização - Inseticida">Inseticida</option>
+        <option value="Pulverização - Fungicida">Fungicida</option>
+        <option value="Capina">Capina</option>
+        <option value="Observação">Observação</option>
+        <option value="Colheita">Colheita</option>
+        <option value="Venda">Venda</option>
+      </select>
+    </div>
+    <div class="historico-list scroll-area" id="historicoList"></div>
+  </div>
+
+  <!-- INSUMOS -->
+  <div class="panel" id="panel-insumos">
+    <div class="section-title">🧪 Insumos da Lavoura</div>
+    <div class="section-title" style="font-size:0.8rem;color:var(--verde);">🟢 Adubação Solo</div>
+    <div class="card" style="margin-bottom:14px;"><div class="card-body" style="padding-top:14px;">
+      <div class="insumo-card"><div><div class="insumo-nome">NPK 10-30-10</div><div class="insumo-tipo">Plantio — cova</div></div><div><div class="insumo-qtd">50g</div><div class="insumo-un">por cova / 94kg total</div></div></div>
+      <div class="insumo-card"><div><div class="insumo-nome">Ureia</div><div class="insumo-tipo">Cobertura — 4 aplicações</div></div><div><div class="insumo-qtd">45g</div><div class="insumo-un">total/cova no ciclo</div></div></div>
+      <div class="insumo-card"><div><div class="insumo-nome">KCl</div><div class="insumo-tipo">Cobertura — 4 aplicações</div></div><div><div class="insumo-qtd">90g</div><div class="insumo-un">total/cova no ciclo</div></div></div>
+    </div></div>
+    <div class="section-title" style="font-size:0.8rem;color:var(--roxo);">🟣 Foliares</div>
+    <div class="card" style="margin-bottom:14px;"><div class="card-body" style="padding-top:14px;">
+      <div class="insumo-card"><div><div class="insumo-nome">Boro 10% — Imperial Nutri</div><div class="insumo-tipo">Floração — 2 aplicações</div></div><div><div class="insumo-qtd">500ml</div><div class="insumo-un">por ha / aplicação</div></div></div>
+      <div class="insumo-card"><div><div class="insumo-nome">Nitrato de Cálcio Mais Fértil</div><div class="insumo-tipo">9%N + 11%Ca — 2 aplicações</div></div><div><div class="insumo-qtd">2–3kg</div><div class="insumo-un">por ha / aplicação</div></div></div>
+      <div class="insumo-card"><div><div class="insumo-nome">Potássio K22% — Imperial Nutri</div><div class="insumo-tipo">Frutificação — 1 aplicação</div></div><div><div class="insumo-qtd">3–4kg</div><div class="insumo-un">por ha / aplicação</div></div></div>
+    </div></div>
+    <div class="section-title" style="font-size:0.8rem;color:#b5760a;">🟠 Inseticidas</div>
+    <div class="card" style="margin-bottom:14px;"><div class="card-body" style="padding-top:14px;">
+      <div class="insumo-card"><div><div class="insumo-nome">Decis 25 EC</div><div class="insumo-tipo">Deltametrina — até 40 DAP</div></div><div><div class="insumo-qtd">⚠️</div><div class="insumo-un">Não usar na floração</div></div></div>
+      <div class="insumo-card"><div><div class="insumo-nome">Azamax</div><div class="insumo-tipo">Nim — todo ciclo ✅ abelha</div></div><div><div class="insumo-qtd">✅</div><div class="insumo-un">Seguro na floração</div></div></div>
+      <div class="insumo-card"><div><div class="insumo-nome">Prêmio</div><div class="insumo-tipo">Clorantraniliprole — máx 3x</div></div><div><div class="insumo-qtd">✅</div><div class="insumo-un">Seguro na floração</div></div></div>
+    </div></div>
+    <div class="section-title" style="font-size:0.8rem;color:#1d4ed8;">🔵 Fungicidas</div>
+    <div class="card"><div class="card-body" style="padding-top:14px;">
+      <div class="insumo-card"><div><div class="insumo-nome">Amistar WG</div><div class="insumo-tipo">Azoxistrobina — máx 2x ciclo</div></div><div><div class="insumo-qtd">✅</div><div class="insumo-un">Seguro na floração</div></div></div>
+      <div class="insumo-card"><div><div class="insumo-nome">Cuprozeb / Mancozebe</div><div class="insumo-tipo">Proteção geral</div></div><div><div class="insumo-qtd">✅</div><div class="insumo-un">Seguro na floração</div></div></div>
+    </div></div>
+  </div>
+
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ─── SUPABASE ─────────────────────────────────────
+const SUPA_URL = 'https://rtavhiznzdnhqagpaucr.supabase.co';
+const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ0YXZoaXpuemRuaHFhZ3BhdWNyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc0NDE0MzcsImV4cCI6MjA5MzAxNzQzN30.SX-SQAcMTYVRkRq69guZjAyhIBWNMqzcq5PP_NhCGpg';
+const sb = supabase.createClient(SUPA_URL, SUPA_KEY);
+
+// ─── STATE ────────────────────────────────────────
+let lavouraId = null;
+let lavouraData = null;
+let registros = [];
+let calDone = [];
+
+// ─── CALENDÁRIO ───────────────────────────────────
+const calendario = [
+  { dap:'0',     tipo:'adub', prod:'NPK 10-30-10',           detalhe:'50g/cova — misturar com terra, 5cm antes da semente', fase:'Plantio' },
+  { dap:'15–20', tipo:'adub', prod:'Ureia',                  detalhe:'15g/cova — 10cm da planta, antes da chuva', fase:'Estabelecimento' },
+  { dap:'15–20', tipo:'adub', prod:'KCl',                    detalhe:'15g/cova — antes da chuva', fase:'Estabelecimento' },
+  { dap:'15–20', tipo:'ins',  prod:'Decis 25 EC',            detalhe:'Mosca branca, vaquinha, pulgão — cedo da manhã', fase:'Estabelecimento' },
+  { dap:'15–20', tipo:'fung', prod:'Cuprozeb/Mancozebe',     detalhe:'Prevenção geral — míldio, mancha', fase:'Estabelecimento' },
+  { dap:'35–40', tipo:'adub', prod:'Ureia',                  detalhe:'15g/cova — antes da chuva', fase:'Desenvolvimento' },
+  { dap:'35–40', tipo:'adub', prod:'KCl',                    detalhe:'25g/cova — antes da chuva', fase:'Desenvolvimento' },
+  { dap:'35–40', tipo:'fol',  prod:'Nitrato de Cálcio',      detalhe:'2–3 kg/ha — firmeza dos frutos', fase:'Desenvolvimento' },
+  { dap:'35–40', tipo:'ins',  prod:'Azamax',                 detalhe:'Prevenção — seletivo abelha ✅', fase:'Desenvolvimento' },
+  { dap:'35–40', tipo:'fung', prod:'Amistar WG',             detalhe:'Oídio e míldio — 1ª de 2 aplicações', fase:'Desenvolvimento' },
+  { dap:'45–50', tipo:'ins',  prod:'Decis 25 EC',            detalhe:'Última aplicação antes da floração ⚠️', fase:'Pré-floração' },
+  { dap:'55–60', tipo:'adub', prod:'Ureia',                  detalhe:'10g/cova — dose reduzida', fase:'Floração' },
+  { dap:'55–60', tipo:'adub', prod:'KCl',                    detalhe:'25g/cova — suporte à floração', fase:'Floração' },
+  { dap:'55–60', tipo:'fol',  prod:'Boro 10% Imperial',      detalhe:'500ml/ha — ⭐ CRÍTICO pegamento das flores', fase:'Floração' },
+  { dap:'60–65', tipo:'fol',  prod:'Boro 10% Imperial',      detalhe:'500ml/ha — 2ª aplicação floração plena', fase:'Floração' },
+  { dap:'55–65', tipo:'ins',  prod:'Prêmio (1ª aplic.)',     detalhe:'Lagarta — ✅ seletivo abelha — máx 3x', fase:'Floração' },
+  { dap:'55–65', tipo:'fung', prod:'Cuprozeb/Mancozebe',     detalhe:'Proteção na floração', fase:'Floração' },
+  { dap:'65–70', tipo:'adub', prod:'KCl',                    detalhe:'25g/cova — enchimento dos frutos', fase:'Frutificação' },
+  { dap:'65–70', tipo:'fol',  prod:'Nitrato de Potássio K22%', detalhe:'3–4 kg/ha — peso e qualidade', fase:'Frutificação' },
+  { dap:'65–70', tipo:'fol',  prod:'Nitrato de Cálcio',      detalhe:'2–3 kg/ha — firmeza, evita podridão', fase:'Frutificação' },
+  { dap:'65–70', tipo:'ins',  prod:'Prêmio (2ª aplic.)',     detalhe:'Lagarta e broca do fruto ✅', fase:'Frutificação' },
+  { dap:'65–70', tipo:'fung', prod:'Amistar WG',             detalhe:'2ª e última aplicação do ciclo', fase:'Frutificação' },
+  { dap:'75–80', tipo:'adub', prod:'Ureia',                  detalhe:'5g/cova — dose mínima final', fase:'Frutificação' },
+  { dap:'75–80', tipo:'adub', prod:'KCl',                    detalhe:'25g/cova — finalização enchimento', fase:'Frutificação' },
+  { dap:'75–80', tipo:'ins',  prod:'Prêmio (3ª aplic.)',     detalhe:'ÚLTIMA — broca do fruto ⚠️ máx 3x', fase:'Frutificação' },
+  { dap:'90–120',tipo:'col',  prod:'Colheita',               detalhe:'Casca firme, pedúnculo seco, som oco', fase:'Colheita' },
+];
+
+const fases = [
+  { nome:'Plantio',         dapMin:0,  dapMax:14,  desc:'Semeadura e estabelecimento inicial.', emoji:'🌱', cor:'var(--verde)', alertas:['Garantir 5cm de terra entre adubo e semente','Solo deve ter alguma umidade'] },
+  { nome:'Estabelecimento', dapMin:15, dapMax:34,  desc:'Plantas com 3–4 folhas. Foco em raízes e arranque.', emoji:'🌿', cor:'var(--azul)', alertas:['Monitorar mosca branca e pulgão','Aplicar Decis e Cuprozeb antes da chuva'] },
+  { nome:'Desenvolvimento', dapMin:35, dapMax:49,  desc:'Ramas crescendo vigorosamente.', emoji:'🍃', cor:'var(--verde2)', alertas:['Adubação + Nitrato Ca foliar','Amistar WG — 1ª aplicação'] },
+  { nome:'Pré-floração',    dapMin:50, dapMax:54,  desc:'Primeiras flores masculinas aparecendo.', emoji:'🌼', cor:'#b5760a', alertas:['⚠️ PARAR Decis — abelhas chegando','Última chance de inseticida não seletivo'] },
+  { nome:'Floração',        dapMin:55, dapMax:74,  desc:'Fase CRÍTICA — só inseticidas seletivos!', emoji:'🌸', cor:'var(--roxo)', alertas:['🐝 Proteger abelhas — usar só Azamax e Prêmio','⭐ Aplicar Boro foliar — pegamento das flores'] },
+  { nome:'Frutificação',    dapMin:75, dapMax:89,  desc:'Frutos em desenvolvimento e enchimento.', emoji:'🎃', cor:'var(--laranja)', alertas:['Foco total no KCl — enchimento do fruto','Prêmio 3ª e última aplicação'] },
+  { nome:'Colheita',        dapMin:90, dapMax:120, desc:'Angola pronta para colheita!', emoji:'🚜', cor:'var(--verde)', alertas:['Casca firme e difícil de furar com a unha','Pedúnculo seco e corticoso — som oco ao bater'] },
+];
+
+// ─── HELPERS ──────────────────────────────────────
+function getDap() {
+  if (!lavouraData?.plantio) return 0;
+  const p = new Date(lavouraData.plantio + 'T00:00:00');
+  const h = new Date(); h.setHours(0,0,0,0);
+  return Math.max(0, Math.floor((h - p) / 86400000));
+}
+
+function getFase(dap) {
+  return fases.find(f => dap >= f.dapMin && dap <= f.dapMax) || fases[fases.length-1];
+}
+
+function parseDapRange(dap) {
+  if (dap.includes('–')) { const p = dap.split('–').map(Number); return [p[0], p[1]]; }
+  const n = parseInt(dap); return [n, n];
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2800);
+}
+
+function showTab(name) {
+  document.querySelectorAll('.tab').forEach((t,i) => {
+    t.classList.toggle('active', ['inicio','calendario','registro','historico','insumos'][i] === name);
+  });
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.getElementById('panel-' + name).classList.add('active');
+  if (name === 'historico') renderHistorico();
+  if (name === 'calendario') renderCalendario();
+}
+
+// ─── SUPABASE — LOAD ──────────────────────────────
+async function carregarDados() {
+  try {
+    // Buscar lavoura
+    const { data: lav } = await sb.from('lavoura').select('*').order('created_at', { ascending: false }).limit(1);
+    if (lav && lav.length > 0) {
+      lavouraData = lav[0];
+      lavouraId = lav[0].id;
+
+      // Buscar registros
+      const { data: regs } = await sb.from('registros').select('*').eq('lavoura_id', lavouraId).order('data', { ascending: false });
+      registros = regs || [];
+
+      // Buscar calendário done
+      const { data: cal } = await sb.from('calendario_done').select('item_index').eq('lavoura_id', lavouraId);
+      calDone = (cal || []).map(c => c.item_index);
+
+      hideLoading();
+      atualizar();
+    } else {
+      // Sem lavoura — mostrar setup
+      hideLoading();
+      document.getElementById('setupOverlay').style.display = 'flex';
+      document.getElementById('setupData').valueAsDate = new Date();
+    }
+  } catch (e) {
+    hideLoading();
+    showToast('⚠️ Erro ao conectar com banco de dados');
+    document.getElementById('setupOverlay').style.display = 'flex';
+  }
+}
+
+function hideLoading() {
+  const l = document.getElementById('loadingScreen');
+  l.classList.add('hide');
+  setTimeout(() => l.style.display = 'none', 400);
+}
+
+// ─── INICIAR ──────────────────────────────────────
+async function iniciar() {
+  const data = document.getElementById('setupData').value;
+  if (!data) { showToast('⚠️ Informe a data de plantio!'); return; }
+
+  const btn = document.getElementById('btnComecar');
+  btn.disabled = true;
+  btn.textContent = 'Salvando...';
+
+  const payload = {
+    plantio: data,
+    area: parseFloat(document.getElementById('setupArea').value) || 1.5,
+    covas: parseInt(document.getElementById('setupCovas').value) || 1875,
+    espaco: document.getElementById('setupEspaco').value || '4 x 2 m',
+  };
+
+  try {
+    const { data: novo, error } = await sb.from('lavoura').insert(payload).select().single();
+    if (error) throw error;
+    lavouraData = novo;
+    lavouraId = novo.id;
+    registros = [];
+    calDone = [];
+    document.getElementById('setupOverlay').style.display = 'none';
+    atualizar();
+    showToast('🌱 Lavoura configurada com sucesso!');
+  } catch(e) {
+    showToast('❌ Erro ao salvar: ' + e.message);
+    btn.disabled = false;
+    btn.textContent = '🌱 INICIAR MONITORAMENTO';
+  }
+}
+
+async function resetar() {
+  if (!confirm('Reconfigurar lavoura? Os registros serão mantidos.')) return;
+  lavouraData = null;
+  lavouraId = null;
+  document.getElementById('setupOverlay').style.display = 'flex';
+  document.getElementById('setupData').valueAsDate = new Date();
+  document.getElementById('btnComecar').disabled = false;
+  document.getElementById('btnComecar').textContent = '🌱 INICIAR MONITORAMENTO';
+}
+
+// ─── ATUALIZAR UI ─────────────────────────────────
+function atualizar() {
+  if (!lavouraData) return;
+  const dap = getDap();
+  const fase = getFase(dap);
+  const restam = Math.max(0, 100 - dap);
+  const pct = Math.min(100, Math.round((dap / 100) * 100));
+
+  document.getElementById('dapNum').textContent = dap;
+  document.getElementById('pillArea').textContent = lavouraData.area + ' ha';
+  document.getElementById('pillCovas').textContent = Number(lavouraData.covas).toLocaleString('pt-BR') + ' covas';
+  document.getElementById('pillEspaco').textContent = lavouraData.espaco;
+
+  const dp = new Date(lavouraData.plantio + 'T00:00:00');
+  document.getElementById('pillPlantio').textContent = '🌱 ' + dp.toLocaleDateString('pt-BR');
+  const dc = new Date(dp); dc.setDate(dc.getDate() + 100);
+  document.getElementById('pillColheita').textContent = '🎃 ~' + dc.toLocaleDateString('pt-BR');
+
+  document.getElementById('statDap').textContent = dap;
+  document.getElementById('statRestam').textContent = restam;
+  document.getElementById('statRegistros').textContent = registros.length;
+  document.getElementById('statPulv').textContent = registros.filter(r => r.tipo && r.tipo.includes('Pulverização')).length;
+
+  document.getElementById('progressFill').style.width = pct + '%';
+  document.getElementById('progressPct').textContent = pct + '%';
+
+  const fa = document.getElementById('faseAtual');
+  fa.setAttribute('data-emoji', fase.emoji);
+  fa.style.background = `linear-gradient(135deg, ${fase.cor}, var(--azul))`;
+  document.getElementById('faseNome').textContent = fase.emoji + ' ' + fase.nome;
+  document.getElementById('faseDesc').textContent = fase.desc;
+  document.getElementById('faseAlertas').innerHTML = fase.alertas.map(a => `<div class="alerta-item">⚡ ${a}</div>`).join('');
+
+  renderProximas(dap);
+  renderCalendario(dap);
+  renderHistorico();
+
+  document.getElementById('regData').valueAsDate = new Date();
+  document.getElementById('regDap').value = dap;
+}
+
+function renderProximas(dap) {
+  const el = document.getElementById('proximasAcoes');
+  const proximas = calendario.filter(c => {
+    const r = parseDapRange(c.dap);
+    return r[1] >= dap && r[0] <= dap + 15;
+  }).slice(0, 4);
+
+  if (!proximas.length) {
+    el.innerHTML = '<div class="empty-state"><div class="icon">✅</div><p>Sem ações nos próximos dias</p></div>';
+    return;
+  }
+  el.innerHTML = proximas.map(c => `
+    <div class="cal-item tipo-${c.tipo}" style="margin-bottom:8px;">
+      <div class="cal-dap">DAP ${c.dap}</div>
+      <div class="cal-produto">${c.prod}</div>
+      <div class="cal-detalhe">${c.detalhe}</div>
+    </div>`).join('');
+}
+
+function renderCalendario(dap) {
+  if (dap === undefined) dap = getDap();
+  const list = document.getElementById('calList');
+  let html = ''; let lastFase = '';
+  calendario.forEach((c, i) => {
+    if (c.fase !== lastFase) {
+      lastFase = c.fase;
+      html += `<div style="font-family:'Bebas Neue',cursive;font-size:0.85rem;letter-spacing:2px;color:#aaa;margin:${i>0?'14px':0} 0 6px;padding-left:2px;">${c.fase.toUpperCase()}</div>`;
+    }
+    const done = calDone.includes(i);
+    const range = parseDapRange(c.dap);
+    const isAtual = dap >= range[0] && dap <= range[1];
+    html += `
+      <div class="cal-item tipo-${c.tipo} ${done?'done':''} ${isAtual&&!done?'atual':''}" style="padding-right:50px;animation-delay:${i*0.03}s">
+        <div class="cal-dap">DAP ${c.dap}</div>
+        <div class="cal-produto">${c.prod}</div>
+        <div class="cal-detalhe">${c.detalhe}</div>
+        <div class="cal-check" onclick="toggleCal(${i})"></div>
+      </div>`;
+  });
+  list.innerHTML = html;
+}
+
+async function toggleCal(i) {
+  if (!lavouraId) return;
+  const idx = calDone.indexOf(i);
+  if (idx >= 0) {
+    calDone.splice(idx, 1);
+    await sb.from('calendario_done').delete().eq('lavoura_id', lavouraId).eq('item_index', i);
+  } else {
+    calDone.push(i);
+    await sb.from('calendario_done').insert({ lavoura_id: lavouraId, item_index: i });
+  }
+  renderCalendario();
+}
+
+// ─── SALVAR REGISTRO ──────────────────────────────
+async function salvarRegistro() {
+  const tipo = document.getElementById('regTipo').value;
+  const prod = document.getElementById('regProduto').value.trim();
+  if (!tipo || !prod) { showToast('⚠️ Preencha tipo e produto!'); return; }
+  if (!lavouraId) { showToast('⚠️ Configure a lavoura primeiro!'); return; }
+
+  const btn = document.getElementById('btnSalvar');
+  btn.disabled = true;
+  btn.textContent = 'Salvando...';
+
+  const payload = {
+    lavoura_id: lavouraId,
+    data: document.getElementById('regData').value,
+    dap: parseInt(document.getElementById('regDap').value) || 0,
+    tipo,
+    produto: prod,
+    quantidade: parseFloat(document.getElementById('regQtd').value) || null,
+    unidade: document.getElementById('regUnidade').value,
+    valor: parseFloat(document.getElementById('regValor').value) || null,
+    observacao: document.getElementById('regObs').value.trim() || null,
+  };
+
+  try {
+    const { data: novo, error } = await sb.from('registros').insert(payload).select().single();
+    if (error) throw error;
+    registros.unshift(novo);
+
+    document.getElementById('regTipo').value = '';
+    document.getElementById('regProduto').value = '';
+    document.getElementById('regQtd').value = '';
+    document.getElementById('regValor').value = '';
+    document.getElementById('regObs').value = '';
+
+    atualizar();
+    showToast('✅ Registro salvo!');
+    showTab('historico');
+  } catch(e) {
+    showToast('❌ Erro: ' + e.message);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '💾 SALVAR REGISTRO';
+  }
+}
+
+// ─── HISTÓRICO ────────────────────────────────────
+function renderHistorico() {
+  const filtro = document.getElementById('filtroTipo')?.value || '';
+  const list = document.getElementById('historicoList');
+  let regs = filtro ? registros.filter(r => r.tipo === filtro) : registros;
+
+  if (!regs.length) {
+    list.innerHTML = '<div class="empty-state"><div class="icon">📋</div><p>Nenhum registro encontrado</p></div>';
+    return;
+  }
+
+  const cores = { 'Adubação Solo':'badge-verde', 'Adubação Foliar':'badge-roxo', 'Pulverização - Inseticida':'badge-amarelo', 'Pulverização - Fungicida':'badge-azul', 'Colheita':'badge-verde', 'Venda':'badge-verde' };
+
+  list.innerHTML = regs.map(r => {
+    const d = r.data ? new Date(r.data + 'T00:00:00').toLocaleDateString('pt-BR') : '—';
+    const bc = cores[r.tipo] || 'badge-amarelo';
+    const qtdStr = r.quantidade ? `${r.quantidade} ${r.unidade||''}` : '';
+    const valStr = r.valor ? ` · R$ ${parseFloat(r.valor).toFixed(2)}` : '';
+    return `
+      <div class="hist-item">
+        <div class="hist-topo">
+          <div class="hist-data">📅 ${d}</div>
+          <div class="hist-dap">DAP ${r.dap||'—'}</div>
+        </div>
+        <span class="badge ${bc} hist-tipo">${r.tipo}</span>
+        <div class="hist-produto">${r.produto}</div>
+        <div class="hist-detalhe">${qtdStr}${valStr}${r.observacao ? ' · ' + r.observacao : ''}</div>
+        <button class="hist-del" onclick="deletarReg('${r.id}')">🗑</button>
+      </div>`;
+  }).join('');
+}
+
+async function deletarReg(id) {
+  if (!confirm('Excluir este registro?')) return;
+  try {
+    await sb.from('registros').delete().eq('id', id);
+    registros = registros.filter(r => r.id !== id);
+    atualizar();
+    showToast('🗑 Registro excluído');
+  } catch(e) {
+    showToast('❌ Erro ao excluir');
+  }
+}
+
+// ─── START ────────────────────────────────────────
+carregarDados();
+</script>
+</body>
+</html>
