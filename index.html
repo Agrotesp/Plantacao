@@ -2,449 +2,767 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <title>Monitor Abóbora Angola</title>
-<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--terra:#3d1f0a;--verde:#2d6a4f;--verde2:#40916c;--verde3:#74c69d;--verde-bg:#d8f3dc;--amarelo:#f4a261;--amarelo2:#e9c46a;--laranja:#e76f51;--creme:#fefae0;--creme2:#f5ede0;--azul:#264653;--roxo:#6d4c9e;--branco:#ffffff;--cinza:#f0ebe3;--cinza2:#d6cfc7;--sombra:0 4px 20px rgba(61,31,10,0.12);--r:16px}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--creme2);font-family:'Nunito',sans-serif;min-height:100vh}
+
+/* LOADING */
+#loading{position:fixed;inset:0;background:var(--terra);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:999;transition:opacity .4s}
+#loading.off{opacity:0;pointer-events:none}
+.l-logo{font-family:'Bebas Neue',cursive;font-size:3rem;color:var(--amarelo2);letter-spacing:3px;margin-bottom:6px}
+.l-sub{color:var(--verde3);font-size:.8rem;font-weight:700;letter-spacing:1px;margin-bottom:24px}
+.spin{width:34px;height:34px;border:3px solid rgba(255,255,255,.1);border-top-color:var(--verde3);border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* SETUP */
+#setup{position:fixed;inset:0;background:rgba(61,31,10,.96);z-index:500;display:none;align-items:center;justify-content:center;padding:20px}
+#setup.on{display:flex}
+.setup-box{background:var(--creme);border-radius:20px;padding:26px 20px;width:100%;max-width:340px;animation:pop .4s cubic-bezier(.34,1.56,.64,1)}
+.setup-box h2{font-family:'Bebas Neue',cursive;font-size:1.7rem;color:var(--terra);letter-spacing:2px;margin-bottom:4px}
+.setup-box p{font-size:.8rem;color:#888;margin-bottom:18px;line-height:1.5}
+.sf{display:flex;flex-direction:column;gap:11px}
+.sf label{display:block;font-size:.6rem;font-weight:800;text-transform:uppercase;letter-spacing:.8px;color:#aaa;margin-bottom:3px}
+.sf input{width:100%;padding:11px 13px;border:2px solid var(--cinza2);border-radius:11px;font-family:'Nunito',sans-serif;font-size:.95rem;font-weight:700;color:var(--terra);background:white}
+.sf input:focus{outline:none;border-color:var(--verde2)}
+.btn-start{width:100%;margin-top:18px;padding:15px;background:var(--verde);color:white;border:none;border-radius:13px;font-family:'Bebas Neue',cursive;font-size:1.2rem;letter-spacing:2px;cursor:pointer}
+.btn-start:disabled{opacity:.6;cursor:not-allowed}
+
+/* HEADER */
+.hdr{background:var(--terra);padding:18px 14px 0;position:relative;overflow:hidden}
+.hdr:before{content:'';position:absolute;inset:0;background:url("data:image/svg+xml,%3Csvg width='40' height='40' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23fff' fill-opacity='.03'%3E%3Crect x='18' y='18' width='4' height='4'/%3E%3Crect x='8' y='18' width='4' height='4'/%3E%3Crect x='28' y='18' width='4' height='4'/%3E%3C/g%3E%3C/svg%3E")}
+.hdr-top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:14px;position:relative}
+.hdr h1{font-family:'Bebas Neue',cursive;font-size:clamp(1.8rem,7vw,2.8rem);color:var(--amarelo2);letter-spacing:2px;line-height:1}
+.hdr h1 span{color:var(--verde3)}
+.dap-b{background:var(--amarelo);color:var(--terra);font-family:'Bebas Neue',cursive;font-size:1.7rem;padding:7px 14px;border-radius:11px;text-align:center;line-height:1;min-width:80px}
+.dap-b small{display:block;font-family:'Nunito',sans-serif;font-size:.55rem;font-weight:800;letter-spacing:1px;text-transform:uppercase}
+.pills{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:14px;position:relative}
+.pill{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.15);color:#c8d8d0;font-size:.65rem;font-weight:700;padding:3px 9px;border-radius:18px}
+.tabs{display:flex;background:rgba(0,0,0,.3);overflow-x:auto;scrollbar-width:none}
+.tabs::-webkit-scrollbar{display:none}
+.tab{flex:1;min-width:56px;padding:10px 4px;text-align:center;font-size:.55rem;font-weight:800;color:rgba(255,255,255,.45);letter-spacing:.5px;text-transform:uppercase;border-bottom:3px solid transparent;white-space:nowrap;cursor:pointer;user-select:none;transition:all .2s;-webkit-tap-highlight-color:transparent}
+.tab.on{color:var(--amarelo2);border-bottom-color:var(--amarelo2);background:rgba(255,255,255,.05)}
+.ti{display:block;font-size:.9rem;margin-bottom:1px}
+
+/* PANELS */
+.content{padding:14px}
+.panel{display:none}
+.panel.on{display:block}
+
+/* CARDS */
+.card{background:var(--branco);border-radius:var(--r);box-shadow:var(--sombra);margin-bottom:13px;overflow:hidden}
+.cb{padding:13px 15px 15px}
+
+/* FASE */
+.fase-box{background:linear-gradient(135deg,var(--verde),var(--azul));border-radius:13px;padding:15px;color:white;margin-bottom:13px;position:relative;overflow:hidden}
+.fase-box:after{content:attr(data-e);position:absolute;right:8px;bottom:-6px;font-size:3.8rem;opacity:.14}
+.fl{font-size:.6rem;font-weight:800;letter-spacing:1px;text-transform:uppercase;opacity:.7;margin-bottom:3px}
+.fn{font-family:'Bebas Neue',cursive;font-size:1.5rem;letter-spacing:1px;line-height:1}
+.fd{font-size:.75rem;opacity:.8;margin-top:5px;line-height:1.4}
+.alts{margin-top:9px;display:flex;flex-direction:column;gap:5px}
+.alt{background:rgba(255,255,255,.15);border-radius:7px;padding:7px 9px;font-size:.72rem;font-weight:700}
+
+/* PROGRESS */
+.prog{margin:13px 0 7px}
+.prog-lbl{display:flex;justify-content:space-between;font-size:.68rem;font-weight:700;color:#888;margin-bottom:5px}
+.prog-bar{height:9px;background:var(--cinza);border-radius:9px;overflow:hidden}
+.prog-fill{height:100%;background:linear-gradient(90deg,var(--verde),var(--verde3));border-radius:9px;transition:width .5s ease}
+
+/* STATS */
+.sg{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:13px}
+.sc{background:var(--branco);border-radius:13px;padding:13px;box-shadow:var(--sombra);text-align:center}
+.sv{font-family:'Bebas Neue',cursive;font-size:1.9rem;letter-spacing:1px;line-height:1;margin-bottom:3px}
+.sl{font-size:.6rem;font-weight:800;text-transform:uppercase;letter-spacing:.7px;color:#aaa}
+
+.stitle{font-family:'Bebas Neue',cursive;font-size:.95rem;letter-spacing:2px;color:var(--terra);margin-bottom:9px;margin-top:3px}
+.sep{height:1px;background:var(--cinza);margin:13px 0}
+.sub{font-size:.75rem;font-weight:800;text-transform:uppercase;letter-spacing:.8px;margin:12px 0 7px}
+
+/* CALENDARIO */
+.clf{font-family:'Bebas Neue',cursive;font-size:.82rem;letter-spacing:2px;color:#bbb;margin:13px 0 5px 2px}
+.ci{border-radius:11px;padding:11px 46px 11px 13px;border-left:4px solid;position:relative;margin-bottom:7px}
+.cd{font-family:'Bebas Neue',cursive;font-size:.82rem;letter-spacing:1px;margin-bottom:1px}
+.cp{font-size:.87rem;font-weight:800}
+.cx{font-size:.7rem;margin-top:2px;opacity:.74;line-height:1.4}
+.ck{position:absolute;right:10px;top:50%;transform:translateY(-50%);width:28px;height:28px;border-radius:50%;border:2px solid currentColor;display:flex;align-items:center;justify-content:center;cursor:pointer;opacity:.4;transition:all .2s;background:transparent;font-size:0}
+.ci.done .ck{opacity:1;background:currentColor}
+.ci.done .ck:after{content:'✓';color:white;font-weight:900;font-size:.85rem}
+.ci.done{opacity:.52}
+.ci.now{box-shadow:0 0 0 2px currentColor}
+.ta{background:#f0faf4;border-color:var(--verde);color:var(--verde)}
+.ti2{background:#fff8f0;border-color:#d97706;color:#92400e}
+.tf{background:#eff6ff;border-color:#3b82f6;color:#1d4ed8}
+.tfo{background:#faf5ff;border-color:#7c3aed;color:#5b21b6}
+.tc{background:#f0fdf4;border-color:var(--verde3);color:var(--verde)}
+
+/* FORM */
+.rf{display:flex;flex-direction:column;gap:9px}
+.fg label{display:block;font-size:.6rem;font-weight:800;text-transform:uppercase;letter-spacing:.7px;color:#999;margin-bottom:3px}
+.fg input,.fg select,.fg textarea{width:100%;padding:10px 11px;border:1.5px solid var(--cinza2);border-radius:9px;font-family:'Nunito',sans-serif;font-size:.87rem;font-weight:600;color:var(--terra);background:var(--creme);-webkit-appearance:none;appearance:none}
+.fg textarea{resize:vertical;min-height:65px}
+.fg input:focus,.fg select:focus,.fg textarea:focus{outline:none;border-color:var(--verde2);background:white}
+.f2{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.f3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:9px}
+.btn-p{width:100%;padding:13px;background:var(--verde);color:white;border:none;border-radius:11px;font-family:'Bebas Neue',cursive;font-size:1rem;letter-spacing:2px;cursor:pointer;box-shadow:0 4px 14px rgba(45,106,79,.3);transition:all .2s;margin-top:3px}
+.btn-p:active{transform:scale(.97)}
+.btn-p:disabled{opacity:.6;cursor:not-allowed;transform:none}
+
+/* HISTORICO */
+.hi{background:var(--creme);border-radius:11px;padding:11px 36px 11px 13px;border-left:3px solid var(--verde2);position:relative;margin-bottom:7px;animation:fu .3s ease both}
+.ht{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px}
+.hd{font-size:.65rem;font-weight:800;color:var(--verde2);text-transform:uppercase}
+.hdp{background:var(--verde2);color:white;font-size:.6rem;font-weight:800;padding:2px 7px;border-radius:9px}
+.hti{display:inline-block;font-size:.6rem;font-weight:800;padding:2px 7px;border-radius:7px;margin-bottom:3px;text-transform:uppercase;letter-spacing:.4px}
+.hp{font-size:.87rem;font-weight:800;color:var(--terra)}
+.hx{font-size:.72rem;color:#888;margin-top:2px;line-height:1.4}
+.hdel{position:absolute;right:7px;top:7px;background:none;border:none;color:#ccc;font-size:.95rem;cursor:pointer;padding:3px;line-height:1}
+.bv{background:var(--verde-bg);color:var(--verde)}
+.ba{background:#fef3c7;color:#92400e}
+.bb{background:#dbeafe;color:#1e40af}
+.br{background:#ede9fe;color:#5b21b6}
+.bo{background:#ffedd5;color:#9a3412}
+
+/* INDICAÇÕES */
+.icard{background:var(--branco);border-radius:13px;box-shadow:var(--sombra);margin-bottom:11px;overflow:hidden}
+.ih{padding:12px 15px;display:flex;align-items:center;gap:9px;cursor:pointer;user-select:none;-webkit-tap-highlight-color:transparent}
+.iico{width:34px;height:34px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:1.05rem;flex-shrink:0}
+.itit{font-size:.87rem;font-weight:800;color:var(--terra);flex:1}
+.iarr{font-size:.75rem;color:#aaa;transition:transform .3s;flex-shrink:0}
+.icard.open .iarr{transform:rotate(180deg)}
+.ibody{display:none;padding:0 15px 15px}
+.icard.open .ibody{display:block}
+.itxt{font-size:.8rem;color:#555;line-height:1.7;margin-bottom:9px}
+.itable{width:100%;border-collapse:collapse;font-size:.75rem;margin-top:7px}
+.itable th{background:var(--cinza);padding:6px 9px;text-align:left;font-size:.6rem;font-weight:800;text-transform:uppercase;letter-spacing:.7px;color:#888}
+.itable td{padding:7px 9px;border-bottom:1px solid #f5f5f5;color:#333;vertical-align:top;line-height:1.4}
+.itable tr:last-child td{border-bottom:none}
+.iwarn{background:#fff8e0;border-left:3px solid var(--amarelo2);border-radius:0 8px 8px 0;padding:9px 11px;font-size:.75rem;color:#7a5800;font-weight:700;margin-top:9px;line-height:1.5}
+.iok{background:#f0faf4;border-left:3px solid var(--verde);border-radius:0 8px 8px 0;padding:9px 11px;font-size:.75rem;color:#1b4332;font-weight:700;margin-top:7px;line-height:1.5}
+
+/* RELATORIO */
+.rsg{display:grid;grid-template-columns:1fr 1fr 1fr;gap:7px;margin-bottom:13px}
+.rsc{background:var(--branco);border-radius:11px;padding:11px;text-align:center;box-shadow:var(--sombra)}
+.rsc .v{font-family:'Bebas Neue',cursive;font-size:1.4rem;color:var(--verde);line-height:1}
+.rsc .l{font-size:.58rem;font-weight:800;text-transform:uppercase;color:#aaa;margin-top:2px;letter-spacing:.4px}
+.rs{margin-bottom:13px}
+.rh{background:var(--terra);color:white;border-radius:11px 11px 0 0;padding:11px 15px}
+.rh h3{font-family:'Bebas Neue',cursive;font-size:.95rem;letter-spacing:2px}
+.rt{width:100%;border-collapse:collapse;font-size:.75rem}
+.rt th{background:var(--cinza);padding:7px 9px;text-align:left;font-size:.6rem;font-weight:800;text-transform:uppercase;letter-spacing:.7px;color:#888;border-bottom:1px solid var(--cinza2)}
+.rt td{padding:8px 9px;border-bottom:1px solid #f5f5f5;color:#333;vertical-align:top}
+.rt tr:last-child td{border-bottom:none}
+.btn-print{width:100%;padding:12px;background:var(--azul);color:white;border:none;border-radius:11px;font-family:'Bebas Neue',cursive;font-size:.95rem;letter-spacing:2px;cursor:pointer;margin-bottom:13px}
+
+/* INSUMOS */
+.inc{background:var(--creme);border-radius:11px;padding:11px 13px;margin-bottom:7px;display:flex;justify-content:space-between;align-items:center}
+.inn{font-size:.83rem;font-weight:800;color:var(--terra)}
+.int{font-size:.62rem;color:#aaa;font-weight:700;text-transform:uppercase;margin-top:1px}
+.inq{font-family:'Bebas Neue',cursive;font-size:1.05rem;color:var(--verde);text-align:right}
+.inu{font-size:.62rem;color:#aaa;font-weight:700;text-align:right}
+
+/* UTILS */
+.empty{text-align:center;padding:28px 14px;color:#ccc}
+.empty .ei{font-size:2.8rem;margin-bottom:8px}
+.empty p{font-size:.82rem;font-weight:700}
+.scroll{max-height:60vh;overflow-y:auto;padding-bottom:7px}
+.toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%) translateY(90px);background:var(--terra);color:white;padding:11px 20px;border-radius:11px;font-size:.82rem;font-weight:700;box-shadow:0 6px 20px rgba(0,0,0,.3);transition:transform .35s cubic-bezier(.34,1.56,.64,1);z-index:9999;pointer-events:none;white-space:nowrap}
+.toast.on{transform:translateX(-50%) translateY(0)}
+@keyframes fu{from{opacity:0;transform:translateY(9px)}to{opacity:1;transform:translateY(0)}}
+@keyframes pop{from{transform:scale(.85);opacity:0}to{transform:scale(1);opacity:1}}
+@media print{.hdr,.tabs,.btn-print,.btn-p,.hdel,#setup,#loading,.toast{display:none!important}.panel{display:none!important}#panel-relatorio{display:block!important}body{background:white}}
+</style>
 </head>
 <body>
 
-<!-- LOADING -->
-<div class="loading-screen" id="loadingScreen">
-  <div class="loading-logo">🎃 Angola</div>
-  <div class="loading-sub">Monitor de Lavoura</div>
-  <div class="spinner"></div>
+<div id="loading">
+  <div class="l-logo">🎃 Angola</div>
+  <div class="l-sub">Monitor de Lavoura</div>
+  <div class="spin"></div>
 </div>
 
-<!-- SETUP -->
-<div class="setup-overlay" id="setupOverlay">
+<div id="setup">
   <div class="setup-box">
     <h2>🎃 Monitor Angola</h2>
-    <p>Configure sua lavoura para começar o acompanhamento completo do ciclo.</p>
-    <div class="setup-fields">
-      <div><label>Data do plantio</label><input type="date" id="setupData"></div>
-      <div><label>Área (ha)</label><input type="number" id="setupArea" value="1.5" step="0.1" min="0.1"></div>
-      <div><label>Número de covas</label><input type="number" id="setupCovas" value="1875" min="1"></div>
-      <div><label>Espaçamento</label><input type="text" id="setupEspaco" value="4 x 2 m"></div>
+    <p>Configure sua lavoura para começar o acompanhamento.</p>
+    <div class="sf">
+      <div><label>Data do plantio</label><input type="date" id="sData"></div>
+      <div><label>Área (ha)</label><input type="number" id="sArea" value="1.5" step="0.1"></div>
+      <div><label>Número de covas</label><input type="number" id="sCovas" value="1875"></div>
+      <div><label>Espaçamento</label><input type="text" id="sEspaco" value="4 x 2 m"></div>
     </div>
-    <button class="btn-comecar" id="btnComecar" onclick="iniciar()">🌱 INICIAR MONITORAMENTO</button>
+    <button class="btn-start" id="btnStart">🌱 INICIAR MONITORAMENTO</button>
   </div>
 </div>
 
-<!-- HEADER -->
-<div class="header">
-  <div class="header-top">
+<div class="hdr">
+  <div class="hdr-top">
     <div>
-      <div style="font-size:0.65rem;font-weight:800;letter-spacing:2px;color:var(--verde3);text-transform:uppercase;margin-bottom:2px;">Abóbora</div>
+      <div style="font-size:.62rem;font-weight:800;letter-spacing:2px;color:var(--verde3);text-transform:uppercase;margin-bottom:2px">Abóbora</div>
       <h1>ANGOLA<br><span>Monitor</span></h1>
     </div>
-    <div class="dap-badge"><small>DAP</small><span id="dapNum">0</span></div>
+    <div class="dap-b"><small>DAP</small><span id="dapNum">0</span></div>
   </div>
-  <div class="header-pills">
-    <span class="hpill" id="pillArea">—</span>
-    <span class="hpill" id="pillCovas">—</span>
-    <span class="hpill" id="pillEspaco">—</span>
-    <span class="hpill" id="pillPlantio">—</span>
-    <span class="hpill" id="pillColheita">—</span>
+  <div class="pills">
+    <span class="pill" id="pArea">—</span>
+    <span class="pill" id="pCovas">—</span>
+    <span class="pill" id="pEspaco">—</span>
+    <span class="pill" id="pPlantio">—</span>
+    <span class="pill" id="pColheita">—</span>
   </div>
-  <div class="tabs">
-    <div class="tab active" onclick="showTab('inicio')"><span class="tab-icon">🏠</span>Início</div>
-    <div class="tab" onclick="showTab('calendario')"><span class="tab-icon">📅</span>Calendário</div>
-    <div class="tab" onclick="showTab('registro')"><span class="tab-icon">✏️</span>Registrar</div>
-    <div class="tab" onclick="showTab('historico')"><span class="tab-icon">📋</span>Histórico</div>
-    <div class="tab" onclick="showTab('indicacoes')"><span class="tab-icon">💡</span>Indicações</div>
-    <div class="tab" onclick="showTab('relatorio')"><span class="tab-icon">📊</span>Relatório</div>
-    <div class="tab" onclick="showTab('insumos')"><span class="tab-icon">🧪</span>Insumos</div>
+  <div class="tabs" id="tabsEl">
+    <div class="tab on" data-tab="inicio"><span class="ti">🏠</span>Início</div>
+    <div class="tab" data-tab="calendario"><span class="ti">📅</span>Calendário</div>
+    <div class="tab" data-tab="registro"><span class="ti">✏️</span>Registrar</div>
+    <div class="tab" data-tab="historico"><span class="ti">📋</span>Histórico</div>
+    <div class="tab" data-tab="indicacoes"><span class="ti">💡</span>Indicações</div>
+    <div class="tab" data-tab="relatorio"><span class="ti">📊</span>Relatório</div>
+    <div class="tab" data-tab="insumos"><span class="ti">🧪</span>Insumos</div>
   </div>
 </div>
 
 <div class="content">
 
-  <!-- ── INÍCIO ───────────────────────────────────── -->
-  <div class="panel active" id="panel-inicio">
-    <div class="fase-atual" id="faseAtual" data-emoji="🌱">
-      <div class="fase-label">📍 Fase atual</div>
-      <div class="fase-nome" id="faseNome">—</div>
-      <div class="fase-desc" id="faseDesc"></div>
-      <div class="alertas" id="faseAlertas"></div>
-    </div>
-    <div class="stats-grid">
-      <div class="stat-card"><div class="stat-val" id="statDap" style="color:var(--verde)">0</div><div class="stat-label">Dias após plantio</div></div>
-      <div class="stat-card"><div class="stat-val" id="statRestam" style="color:var(--amarelo)">100</div><div class="stat-label">Dias p/ colheita</div></div>
-      <div class="stat-card"><div class="stat-val" id="statRegistros" style="color:var(--roxo)">0</div><div class="stat-label">Registros feitos</div></div>
-      <div class="stat-card"><div class="stat-val" id="statPulv" style="color:var(--laranja)">0</div><div class="stat-label">Pulverizações</div></div>
-    </div>
-    <div class="progress-wrap">
-      <div class="progress-label"><span>Progresso do ciclo</span><span id="progressPct">0%</span></div>
-      <div class="progress-bar"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
-    </div>
-    <div class="section-title">⚡ Próximas ações</div>
-    <div id="proximasAcoes"></div>
-    <div class="sep"></div>
-    <div style="text-align:center">
-      <button onclick="resetar()" style="background:none;border:none;color:#bbb;font-size:0.75rem;font-weight:700;cursor:pointer;padding:8px;text-decoration:underline;">⚙️ Reconfigurar lavoura</button>
-    </div>
+<!-- INÍCIO -->
+<div class="panel on" id="panel-inicio">
+  <div class="fase-box" id="faseBox" data-e="🌱">
+    <div class="fl">📍 Fase atual</div>
+    <div class="fn" id="faseNome">—</div>
+    <div class="fd" id="faseDesc"></div>
+    <div class="alts" id="faseAlts"></div>
   </div>
-
-  <!-- ── CALENDÁRIO ────────────────────────────────── -->
-  <div class="panel" id="panel-calendario">
-    <div class="section-title">📅 Calendário de Manejo</div>
-    <p style="font-size:0.75rem;color:#aaa;margin-bottom:12px;font-weight:600;">Sequência correta com intervalos entre produtos. Toque no ✓ para marcar como realizado.</p>
-    <div id="calList" class="scroll-area"></div>
+  <div class="sg">
+    <div class="sc"><div class="sv" id="stDap" style="color:var(--verde)">0</div><div class="sl">Dias após plantio</div></div>
+    <div class="sc"><div class="sv" id="stRest" style="color:var(--amarelo)">100</div><div class="sl">Dias p/ colheita</div></div>
+    <div class="sc"><div class="sv" id="stReg" style="color:var(--roxo)">0</div><div class="sl">Registros</div></div>
+    <div class="sc"><div class="sv" id="stPulv" style="color:var(--laranja)">0</div><div class="sl">Pulverizações</div></div>
   </div>
+  <div class="prog">
+    <div class="prog-lbl"><span>Progresso do ciclo</span><span id="pPct">0%</span></div>
+    <div class="prog-bar"><div class="prog-fill" id="pFill" style="width:0%"></div></div>
+  </div>
+  <div class="stitle">⚡ Próximas ações</div>
+  <div id="proxEl"></div>
+  <div class="sep"></div>
+  <div style="text-align:center"><button id="btnReset" style="background:none;border:none;color:#bbb;font-size:.72rem;font-weight:700;cursor:pointer;padding:7px;text-decoration:underline">⚙️ Reconfigurar lavoura</button></div>
+</div>
 
-  <!-- ── REGISTRO ──────────────────────────────────── -->
-  <div class="panel" id="panel-registro">
-    <div class="section-title">✏️ Novo Registro</div>
-    <div class="card">
-      <div class="card-body">
-        <div class="reg-form">
-          <div class="fields-2">
-            <div class="field-group"><label>Data</label><input type="date" id="regData"></div>
-            <div class="field-group"><label>DAP</label><input type="number" id="regDap" placeholder="Ex: 20" min="0"></div>
-          </div>
-          <div class="field-group">
-            <label>Tipo de registro</label>
-            <select id="regTipo">
-              <option value="">— Selecione —</option>
-              <option value="Adubação Solo">🟢 Adubação Solo</option>
-              <option value="Adubação Foliar">🟣 Adubação Foliar</option>
-              <option value="Pulverização - Inseticida">🟠 Pulverização - Inseticida</option>
-              <option value="Pulverização - Fungicida">🔵 Pulverização - Fungicida</option>
-              <option value="Capina">🌿 Capina</option>
-              <option value="Irrigação">💧 Irrigação</option>
-              <option value="Observação de Praga">🐛 Observação de Praga</option>
-              <option value="Observação de Doença">🍄 Observação de Doença</option>
-              <option value="Observação Geral">📝 Observação Geral</option>
-              <option value="Colheita">🎃 Colheita</option>
-              <option value="Venda">💰 Venda</option>
-              <option value="Mão de Obra">👷 Mão de Obra</option>
-              <option value="Outro">⚙️ Outro</option>
-            </select>
-          </div>
-          <div class="field-group"><label>Produto / Atividade</label><input type="text" id="regProduto" placeholder="Ex: Amistar WG, Ureia, Capina..."></div>
-          <div class="fields-3">
-            <div class="field-group"><label>Quantidade</label><input type="number" id="regQtd" placeholder="0" step="0.01" min="0"></div>
-            <div class="field-group">
-              <label>Unidade</label>
-              <select id="regUnidade">
-                <option value="ml">ml</option>
-                <option value="L">L</option>
-                <option value="g">g</option>
-                <option value="kg">kg</option>
-                <option value="sacos">sacos</option>
-                <option value="cx">caixas</option>
-                <option value="diárias">diárias</option>
-                <option value="—">—</option>
-              </select>
-            </div>
-            <div class="field-group"><label>Custo (R$)</label><input type="number" id="regValor" placeholder="0,00" step="0.01" min="0"></div>
-          </div>
-          <div class="field-group"><label>Observações / Condições</label><textarea id="regObs" placeholder="Solo úmido, chuva prevista, pragas observadas, qtd de frutos..."></textarea></div>
-          <button class="btn-primary" id="btnSalvar" onclick="salvarRegistro()">💾 SALVAR REGISTRO</button>
+<!-- CALENDARIO -->
+<div class="panel" id="panel-calendario">
+  <div class="stitle">📅 Calendário de Manejo</div>
+  <p style="font-size:.72rem;color:#aaa;margin-bottom:11px;font-weight:600">Sequência correta com intervalos. Toque no círculo para marcar ✓</p>
+  <div class="scroll" id="calEl"></div>
+</div>
+
+<!-- REGISTRO -->
+<div class="panel" id="panel-registro">
+  <div class="stitle">✏️ Novo Registro</div>
+  <div class="card"><div class="cb">
+    <div class="rf">
+      <div class="f2">
+        <div class="fg"><label>Data</label><input type="date" id="rData"></div>
+        <div class="fg"><label>DAP</label><input type="number" id="rDap" placeholder="Ex: 20" min="0"></div>
+      </div>
+      <div class="fg"><label>Tipo</label>
+        <select id="rTipo">
+          <option value="">— Selecione —</option>
+          <option value="Adubação Solo">🟢 Adubação Solo</option>
+          <option value="Adubação Foliar">🟣 Adubação Foliar</option>
+          <option value="Pulverização - Inseticida">🟠 Pulverização - Inseticida</option>
+          <option value="Pulverização - Fungicida">🔵 Pulverização - Fungicida</option>
+          <option value="Capina">🌿 Capina</option>
+          <option value="Observação de Praga">🐛 Observação de Praga</option>
+          <option value="Observação de Doença">🍄 Observação de Doença</option>
+          <option value="Observação Geral">📝 Observação Geral</option>
+          <option value="Colheita">🎃 Colheita</option>
+          <option value="Venda">💰 Venda</option>
+          <option value="Mão de Obra">👷 Mão de Obra</option>
+          <option value="Outro">⚙️ Outro</option>
+        </select>
+      </div>
+      <div class="fg"><label>Produto / Atividade</label><input type="text" id="rProd" placeholder="Ex: Amistar WG, Ureia..."></div>
+      <div class="f3">
+        <div class="fg"><label>Quantidade</label><input type="number" id="rQtd" placeholder="0" step="0.01" min="0"></div>
+        <div class="fg"><label>Unidade</label>
+          <select id="rUn"><option>ml</option><option>L</option><option>g</option><option>kg</option><option>sacos</option><option>cx</option><option>diárias</option><option>—</option></select>
         </div>
+        <div class="fg"><label>Custo (R$)</label><input type="number" id="rVal" placeholder="0,00" step="0.01" min="0"></div>
       </div>
+      <div class="fg"><label>Observações</label><textarea id="rObs" placeholder="Solo úmido, chuva prevista, pragas observadas..."></textarea></div>
+      <button class="btn-p" id="btnSalvar">💾 SALVAR REGISTRO</button>
+    </div>
+  </div></div>
+</div>
+
+<!-- HISTORICO -->
+<div class="panel" id="panel-historico">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:11px">
+    <div class="stitle" style="margin:0">📋 Histórico</div>
+    <select id="filtro" style="font-size:.72rem;font-weight:700;padding:6px 9px;border:1.5px solid var(--cinza2);border-radius:8px;font-family:'Nunito',sans-serif;background:var(--creme);color:var(--terra);-webkit-appearance:none;appearance:none">
+      <option value="">Todos</option>
+      <option value="Adubação Solo">Adubação Solo</option>
+      <option value="Adubação Foliar">Foliar</option>
+      <option value="Pulverização - Inseticida">Inseticida</option>
+      <option value="Pulverização - Fungicida">Fungicida</option>
+      <option value="Capina">Capina</option>
+      <option value="Observação de Praga">Pragas</option>
+      <option value="Colheita">Colheita</option>
+      <option value="Venda">Venda</option>
+    </select>
+  </div>
+  <div class="scroll" id="histEl"></div>
+</div>
+
+<!-- INDICAÇÕES -->
+<div class="panel" id="panel-indicacoes">
+  <div class="stitle">💡 Indicações e Explicações</div>
+  <p style="font-size:.72rem;color:#aaa;margin-bottom:13px;font-weight:600">Toque em cada card para expandir</p>
+
+  <div class="icard open">
+    <div class="ih"><div class="iico" style="background:#fff8f0">⏱️</div><div class="itit">Sequência correta de aplicações</div><div class="iarr">▼</div></div>
+    <div class="ibody">
+      <div class="itxt">Nunca misture defensivos com foliares. Respeite os intervalos abaixo para máxima eficácia e sem risco de queima.</div>
+      <table class="itable"><thead><tr><th>Dia</th><th>Aplicação</th><th>Observação</th></tr></thead><tbody>
+        <tr><td><strong>Dia 1</strong></td><td>Inseticida + Fungicida</td><td>Podem misturar entre si</td></tr>
+        <tr><td><strong>Dia 2–3</strong></td><td>Boro 10% + Potássio K22%</td><td>✅ Compatíveis — misturar juntos</td></tr>
+        <tr><td><strong>Dia 5–6</strong></td><td>Nitrato de Cálcio</td><td>⚠️ SEMPRE SOZINHO</td></tr>
+      </tbody></table>
+      <div class="iwarn">⚠️ Nitrato de Cálcio nunca junto com Boro, Potássio ou defensivos — risco de queima e precipitação!</div>
     </div>
   </div>
 
-  <!-- ── HISTÓRICO ─────────────────────────────────── -->
-  <div class="panel" id="panel-historico">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
-      <div class="section-title" style="margin:0">📋 Histórico</div>
-      <select id="filtroTipo" onchange="renderHistorico()" style="font-size:0.75rem;font-weight:700;padding:7px 10px;border:1.5px solid var(--cinza2);border-radius:8px;font-family:'Nunito',sans-serif;background:var(--creme);color:var(--terra);-webkit-appearance:none;appearance:none;">
-        <option value="">Todos</option>
-        <option value="Adubação Solo">Adubação Solo</option>
-        <option value="Adubação Foliar">Foliar</option>
-        <option value="Pulverização - Inseticida">Inseticida</option>
-        <option value="Pulverização - Fungicida">Fungicida</option>
-        <option value="Capina">Capina</option>
-        <option value="Observação de Praga">Pragas</option>
-        <option value="Observação de Doença">Doenças</option>
-        <option value="Colheita">Colheita</option>
-        <option value="Venda">Venda</option>
-        <option value="Mão de Obra">Mão de Obra</option>
-      </select>
-    </div>
-    <div class="scroll-area" id="historicoList"></div>
-  </div>
-
-  <!-- ── INDICAÇÕES ────────────────────────────────── -->
-  <div class="panel" id="panel-indicacoes">
-    <div class="section-title">💡 Indicações e Explicações</div>
-    <p style="font-size:0.78rem;color:#aaa;margin-bottom:14px;font-weight:600;">Toque em cada card para expandir as explicações.</p>
-
-    <!-- Sequência de aplicações -->
-    <div class="ind-card open" onclick="toggleInd(this)">
-      <div class="ind-header">
-        <div class="ind-icon" style="background:#fff8f0">⏱️</div>
-        <div class="ind-titulo">Sequência correta de aplicações</div>
-        <div class="ind-arrow">▼</div>
-      </div>
-      <div class="ind-body">
-        <div class="ind-texto">Nunca misture defensivos com foliares na mesma calda. Respeite os intervalos abaixo para máxima eficácia e sem risco de queima.</div>
-        <table class="ind-tabela">
-          <thead><tr><th>Dia</th><th>Aplicação</th><th>Observação</th></tr></thead>
-          <tbody>
-            <tr><td><strong>Dia 1</strong></td><td>Inseticida + Fungicida</td><td>Podem ser misturados entre si</td></tr>
-            <tr><td><strong>Dia 2–3</strong></td><td>Boro 10% + Potássio K22%</td><td>✅ Compatíveis — podem misturar</td></tr>
-            <tr><td><strong>Dia 5–6</strong></td><td>Nitrato de Cálcio</td><td>⚠️ SEMPRE SOZINHO</td></tr>
-          </tbody>
-        </table>
-        <div class="ind-alerta">⚠️ Nitrato de Cálcio nunca junto com Boro, Potássio ou defensivos — risco de queima e precipitação na bomba!</div>
-      </div>
-    </div>
-
-    <!-- Nitrato de Cálcio -->
-    <div class="ind-card" onclick="toggleInd(this)">
-      <div class="ind-header">
-        <div class="ind-icon" style="background:#f0faf4">🧪</div>
-        <div class="ind-titulo">Por que usar Nitrato de Cálcio foliar?</div>
-        <div class="ind-arrow">▼</div>
-      </div>
-      <div class="ind-body">
-        <div class="ind-texto">Sua lavoura não teve calagem antes do plantio, o que torna o cálcio foliar ainda mais importante. No solo arenoso o cálcio lixivia rápido — o foliar garante que chegue na planta.</div>
-        <table class="ind-tabela">
-          <thead><tr><th>Benefício</th><th>Por quê</th></tr></thead>
-          <tbody>
-            <tr><td>Firmeza do fruto</td><td>Ca fortalece a parede celular</td></tr>
-            <tr><td>Evita podridão apical</td><td>Mancha preta na ponta — causada por falta de Ca</td></tr>
-            <tr><td>Maior conservação</td><td>Fruto dura mais após colheita</td></tr>
-            <tr><td>Substitui a calagem</td><td>Para este ciclo — não corrige o solo mas nutre a planta</td></tr>
-          </tbody>
-        </table>
-        <div class="ind-ok">✅ Recomendado 3 aplicações: DAP 46, 65 e 79 — sempre sozinho com intervalo de 3–4 dias dos outros foliares.</div>
-      </div>
-    </div>
-
-    <!-- Boro -->
-    <div class="ind-card" onclick="toggleInd(this)">
-      <div class="ind-header">
-        <div class="ind-icon" style="background:#faf5ff">🌸</div>
-        <div class="ind-titulo">Boro — o mais crítico para a produção</div>
-        <div class="ind-arrow">▼</div>
-      </div>
-      <div class="ind-body">
-        <div class="ind-texto">O boro é o micronutriente que mais impacta diretamente no número de frutos. Sem boro a flor não é fecundada e cai sem formar fruto.</div>
-        <table class="ind-tabela">
-          <thead><tr><th>Função</th><th>Detalhe</th></tr></thead>
-          <tbody>
-            <tr><td>Tubo polínico</td><td>Essencial para fecundação da flor</td></tr>
-            <tr><td>Pegamento</td><td>Reduz queda de frutos novos</td></tr>
-            <tr><td>Estrutura celular</td><td>Age junto com o cálcio</td></tr>
-          </tbody>
-        </table>
-        <div class="ind-alerta">⚠️ Cuidado com excesso — boro é fitotóxico em dose alta. Menos é mais! Dose: 500ml/ha por aplicação.</div>
-        <div class="ind-ok">✅ Pode misturar com Potássio K22% — são compatíveis. Aplicar 1–2 dias após defensivos.</div>
-      </div>
-    </div>
-
-    <!-- Potássio foliar -->
-    <div class="ind-card" onclick="toggleInd(this)">
-      <div class="ind-header">
-        <div class="ind-icon" style="background:#fef3c7">🎃</div>
-        <div class="ind-titulo">Potássio K22% — enchimento dos frutos</div>
-        <div class="ind-arrow">▼</div>
-      </div>
-      <div class="ind-body">
-        <div class="ind-texto">O potássio foliar age mais rápido que o KCl do solo. Na frutificação ele é essencial para o peso, cor e sabor da abóbora Angola.</div>
-        <table class="ind-tabela">
-          <thead><tr><th>Benefício</th><th>Resultado</th></tr></thead>
-          <tbody>
-            <tr><td>Peso dos frutos</td><td>Enchimento mais eficiente</td></tr>
-            <tr><td>Aparência</td><td>Cor e brilho melhores — mais valor comercial</td></tr>
-            <tr><td>Sabor</td><td>Maior teor de açúcar</td></tr>
-            <tr><td>Casca</td><td>Menos rachaduras</td></tr>
-          </tbody>
-        </table>
-        <div class="ind-ok">✅ Pode misturar com Boro 10%. Dose: 3–4 kg/ha. Aplicar na frutificação DAP 61 e 75.</div>
-      </div>
-    </div>
-
-    <!-- Inseticidas -->
-    <div class="ind-card" onclick="toggleInd(this)">
-      <div class="ind-header">
-        <div class="ind-icon" style="background:#fff8f0">🐛</div>
-        <div class="ind-titulo">Inseticidas — quando usar cada um</div>
-        <div class="ind-arrow">▼</div>
-      </div>
-      <div class="ind-body">
-        <table class="ind-tabela">
-          <thead><tr><th>Produto</th><th>Alvo</th><th>Floração</th><th>Fase</th></tr></thead>
-          <tbody>
-            <tr><td><strong>Decis 25 EC</strong></td><td>Vaquinha, pulgão, mosca branca</td><td style="color:#c62828">❌ Não</td><td>Até DAP 54</td></tr>
-            <tr><td><strong>Azamax</strong></td><td>Mosca branca, ácaros, pulgão</td><td style="color:#2d6a4f">✅ Sim</td><td>Todo ciclo</td></tr>
-            <tr><td><strong>Prêmio</strong></td><td>Lagarta, broca do fruto</td><td style="color:#2d6a4f">✅ Sim</td><td>Máx 3 aplicações</td></tr>
-          </tbody>
-        </table>
-        <div class="ind-alerta">⚠️ Decis sai da planta em 5–7 dias. Parar no DAP 50–54. Na floração use APENAS Azamax e Prêmio.</div>
-        <div class="ind-ok">✅ Prêmio — máximo 3 aplicações por ciclo. Guardar para floração (DAP 57) e frutificação (DAP 71 e 82).</div>
-      </div>
-    </div>
-
-    <!-- Fungicidas -->
-    <div class="ind-card" onclick="toggleInd(this)">
-      <div class="ind-header">
-        <div class="ind-icon" style="background:#eff6ff">🍄</div>
-        <div class="ind-titulo">Fungicidas — rotação e limites</div>
-        <div class="ind-arrow">▼</div>
-      </div>
-      <div class="ind-body">
-        <table class="ind-tabela">
-          <thead><tr><th>Produto</th><th>Alvo</th><th>Limite</th><th>Abelha</th></tr></thead>
-          <tbody>
-            <tr><td><strong>Amistar WG</strong></td><td>Oídio, míldio</td><td>⚠️ Máx 2x ciclo</td><td>✅ Seguro</td></tr>
-            <tr><td><strong>Cuprozeb/Mancozebe</strong></td><td>Míldio, antracnose</td><td>✅ Sem limite</td><td>✅ Seguro</td></tr>
-          </tbody>
-        </table>
-        <div class="ind-ok">✅ Todos os fungicidas são seguros para abelhas — podem ser usados em qualquer fase incluindo floração.</div>
-        <div class="ind-alerta">⚠️ Amistar WG: máximo 2 aplicações por ciclo para evitar resistência. Alterne com Cuprozeb.</div>
-      </div>
-    </div>
-
-    <!-- Abelhas -->
-    <div class="ind-card" onclick="toggleInd(this)">
-      <div class="ind-header">
-        <div class="ind-icon" style="background:#fef9c3">🐝</div>
-        <div class="ind-titulo">Proteger abelhas — por que é tão importante</div>
-        <div class="ind-arrow">▼</div>
-      </div>
-      <div class="ind-body">
-        <div class="ind-texto">A abóbora Angola depende de polinização para formar frutos. Sem abelhas a produção pode cair 60–80%. Por isso na floração (DAP 55–74) só produtos seletivos!</div>
-        <table class="ind-tabela">
-          <thead><tr><th>Produto</th><th>Risco para abelha</th></tr></thead>
-          <tbody>
-            <tr><td>Decis 25 EC</td><td style="color:#c62828">❌ Alto — piretroide</td></tr>
-            <tr><td>Actara / Evidence</td><td style="color:#c62828">❌ Alto — neonicotinoide persiste 30–60 dias</td></tr>
-            <tr><td>Azamax</td><td style="color:#2d6a4f">✅ Seguro — nim biológico</td></tr>
-            <tr><td>Prêmio</td><td style="color:#2d6a4f">✅ Seguro — diamida, não afeta abelhas</td></tr>
-            <tr><td>Fungicidas em geral</td><td style="color:#2d6a4f">✅ Todos seguros</td></tr>
-          </tbody>
-        </table>
-        <div class="ind-ok">✅ Regra de ouro: pulverizar sempre cedo da manhã ou fim de tarde — nunca com sol forte ou flores abertas.</div>
-      </div>
-    </div>
-
-    <!-- Solo arenoso sem calagem -->
-    <div class="ind-card" onclick="toggleInd(this)">
-      <div class="ind-header">
-        <div class="ind-icon" style="background:#fef3c7">🌱</div>
-        <div class="ind-titulo">Solo arenoso sem calagem — cuidados</div>
-        <div class="ind-arrow">▼</div>
-      </div>
-      <div class="ind-body">
-        <div class="ind-texto">Sem calagem o pH do solo pode ser baixo, afetando a absorção de nutrientes. O solo arenoso ainda lixivia rápido com a chuva. Estratégias para compensar:</div>
-        <table class="ind-tabela">
-          <thead><tr><th>Problema</th><th>Como compensar</th></tr></thead>
-          <tbody>
-            <tr><td>Falta de cálcio</td><td>Nitrato de Cálcio foliar — 3 aplicações</td></tr>
-            <tr><td>Lixiviação de K</td><td>KCl parcelado em 4x — doses menores mais frequentes</td></tr>
-            <tr><td>Lixiviação de N</td><td>Ureia só com chuva prevista — evita perda por volatilização</td></tr>
-            <tr><td>pH baixo</td><td>Corrigir na próxima safra com calcário dolomítico</td></tr>
-          </tbody>
-        </table>
-        <div class="ind-alerta">⚠️ Para próxima safra: aplicar 1–2 t/ha de calcário dolomítico 60–90 dias antes do plantio e incorporar ao solo.</div>
-      </div>
-    </div>
-
-  </div><!-- /panel-indicacoes -->
-
-  <!-- ── RELATÓRIO ──────────────────────────────────── -->
-  <div class="panel" id="panel-relatorio">
-    <div class="section-title">📊 Relatório da Lavoura</div>
-    <button class="btn-print" onclick="window.print()">🖨️ IMPRIMIR / SALVAR PDF</button>
-    <div class="rel-stat-grid" id="relStats"></div>
-
-    <div class="rel-section">
-      <div class="rel-header"><h3>🟠 Pulverizações</h3></div>
-      <div class="card" style="border-radius:0 0 12px 12px;margin-bottom:0;">
-        <table class="rel-table" id="relPulvTable">
-          <thead><tr><th>Data</th><th>DAP</th><th>Produto</th><th>Qtd</th><th>Obs</th></tr></thead>
-          <tbody></tbody>
-        </table>
-      </div>
-    </div>
-
-    <div class="rel-section" style="margin-top:14px;">
-      <div class="rel-header"><h3>🟢 Adubações</h3></div>
-      <div class="card" style="border-radius:0 0 12px 12px;margin-bottom:0;">
-        <table class="rel-table" id="relAdubTable">
-          <thead><tr><th>Data</th><th>DAP</th><th>Produto</th><th>Qtd</th><th>Custo</th></tr></thead>
-          <tbody></tbody>
-        </table>
-      </div>
-    </div>
-
-    <div class="rel-section" style="margin-top:14px;">
-      <div class="rel-header"><h3>💰 Custos por Categoria</h3></div>
-      <div class="card" style="border-radius:0 0 12px 12px;margin-bottom:0;">
-        <table class="rel-table" id="relCustoTable">
-          <thead><tr><th>Categoria</th><th>Total (R$)</th></tr></thead>
-          <tbody></tbody>
-        </table>
-      </div>
-    </div>
-
-    <div class="rel-section" style="margin-top:14px;">
-      <div class="rel-header"><h3>🐛 Observações e Pragas</h3></div>
-      <div class="card" style="border-radius:0 0 12px 12px;margin-bottom:0;">
-        <table class="rel-table" id="relObsTable">
-          <thead><tr><th>Data</th><th>DAP</th><th>Tipo</th><th>Descrição</th></tr></thead>
-          <tbody></tbody>
-        </table>
-      </div>
-    </div>
-
-    <div class="rel-section" style="margin-top:14px;">
-      <div class="rel-header"><h3>🎃 Colheita e Venda</h3></div>
-      <div class="card" style="border-radius:0 0 12px 12px;margin-bottom:0;">
-        <table class="rel-table" id="relColheitaTable">
-          <thead><tr><th>Data</th><th>DAP</th><th>Tipo</th><th>Qtd</th><th>Valor R$</th><th>Obs</th></tr></thead>
-          <tbody></tbody>
-        </table>
-      </div>
-    </div>
-
-    <div style="text-align:center;padding:20px 0 8px;font-size:0.72rem;color:#aaa;font-weight:700;">
-      Gerado em <span id="relDataGeracao"></span> — Monitor Abóbora Angola
+  <div class="icard">
+    <div class="ih"><div class="iico" style="background:#f0faf4">🧪</div><div class="itit">Por que usar Nitrato de Cálcio foliar?</div><div class="iarr">▼</div></div>
+    <div class="ibody">
+      <div class="itxt">Sua lavoura não teve calagem — o cálcio foliar é ainda mais importante. No solo arenoso o Ca lixivia rápido e o foliar garante que chegue na planta.</div>
+      <table class="itable"><thead><tr><th>Benefício</th><th>Por quê</th></tr></thead><tbody>
+        <tr><td>Firmeza do fruto</td><td>Ca fortalece a parede celular</td></tr>
+        <tr><td>Evita podridão apical</td><td>Mancha preta na ponta — causada por falta de Ca</td></tr>
+        <tr><td>Conservação</td><td>Fruto dura mais após colheita</td></tr>
+      </tbody></table>
+      <div class="iok">✅ 3 aplicações: DAP 46, 65 e 79 — sempre sozinho com 3–4 dias de intervalo dos outros foliares.</div>
     </div>
   </div>
 
-  <!-- ── INSUMOS ────────────────────────────────────── -->
-  <div class="panel" id="panel-insumos">
-    <div class="section-title">🧪 Insumos da Lavoura</div>
-
-    <div class="sub-title" style="color:var(--verde)">🟢 Adubação Solo</div>
-    <div class="card" style="margin-bottom:14px;"><div class="card-body">
-      <div class="insumo-card"><div><div class="insumo-nome">NPK 10-30-10</div><div class="insumo-tipo">Plantio — cova</div></div><div><div class="insumo-qtd">50g/cova</div><div class="insumo-un">94 kg total</div></div></div>
-      <div class="insumo-card"><div><div class="insumo-nome">Ureia</div><div class="insumo-tipo">4 coberturas — DAP 15/35/55/80</div></div><div><div class="insumo-qtd">45g/cova</div><div class="insumo-un">ciclo completo</div></div></div>
-      <div class="insumo-card"><div><div class="insumo-nome">KCl</div><div class="insumo-tipo">4 coberturas — DAP 15/35/55/70/80</div></div><div><div class="insumo-qtd">90g/cova</div><div class="insumo-un">ciclo completo</div></div></div>
-    </div></div>
-
-    <div class="sub-title" style="color:#5b21b6">🟣 Foliares — Sequência Correta</div>
-    <div class="card" style="margin-bottom:14px;"><div class="card-body">
-      <div class="insumo-card"><div><div class="insumo-nome">Boro 10% — Imperial Nutri</div><div class="insumo-tipo">Dia 1 de foliar — pode misturar com K22%</div></div><div><div class="insumo-qtd">500ml/ha</div><div class="insumo-un">3 aplicações</div></div></div>
-      <div class="insumo-card"><div><div class="insumo-nome">Potássio K22% — Imperial Nutri</div><div class="insumo-tipo">Dia 1 de foliar — pode misturar com Boro</div></div><div><div class="insumo-qtd">3–4kg/ha</div><div class="insumo-un">3 aplicações</div></div></div>
-      <div class="insumo-card" style="border:1.5px solid #fee2e2"><div><div class="insumo-nome">Nitrato de Cálcio Mais Fértil</div><div class="insumo-tipo">⚠️ SEMPRE SOZINHO — 3–4 dias após Boro+K</div></div><div><div class="insumo-qtd">2–3kg/ha</div><div class="insumo-un">3 aplicações</div></div></div>
-    </div></div>
-
-    <div class="sub-title" style="color:#92400e">🟠 Inseticidas</div>
-    <div class="card" style="margin-bottom:14px;"><div class="card-body">
-      <div class="insumo-card"><div><div class="insumo-nome">Decis 25 EC</div><div class="insumo-tipo">Deltametrina — SOMENTE até DAP 54</div></div><div><div class="insumo-qtd">⚠️</div><div class="insumo-un">Proibido na floração</div></div></div>
-      <div class="insumo-card"><div><div class="insumo-nome">Azamax</div><div class="insumo-tipo">Nim — todo o ciclo</div></div><div><div class="insumo-qtd">✅</div><div class="insumo-un">Seguro na floração</div></div></div>
-      <div class="insumo-card"><div><div class="insumo-nome">Prêmio</div><div class="insumo-tipo">Clorantraniliprole — MÁXIMO 3x ciclo</div></div><div><div class="insumo-qtd">✅</div><div class="insumo-un">Seguro na floração</div></div></div>
-    </div></div>
-
-    <div class="sub-title" style="color:#1e40af">🔵 Fungicidas</div>
-    <div class="card"><div class="card-body">
-      <div class="insumo-card"><div><div class="insumo-nome">Amistar WG</div><div class="insumo-tipo">Azoxistrobina — MÁXIMO 2x ciclo</div></div><div><div class="insumo-qtd">✅</div><div class="insumo-un">Seguro na floração</div></div></div>
-      <div class="insumo-card"><div><div class="insumo-nome">Cuprozeb / Mancozebe</div><div class="insumo-tipo">Proteção geral — todo ciclo</div></div><div><div class="insumo-qtd">✅</div><div class="insumo-un">Seguro na floração</div></div></div>
-    </div></div>
+  <div class="icard">
+    <div class="ih"><div class="iico" style="background:#faf5ff">🌸</div><div class="itit">Boro — crítico para o pegamento de flores</div><div class="iarr">▼</div></div>
+    <div class="ibody">
+      <div class="itxt">O boro é o micronutriente que mais impacta no número de frutos. Sem boro a flor não é fecundada e cai sem formar fruto.</div>
+      <table class="itable"><thead><tr><th>Função</th><th>Detalhe</th></tr></thead><tbody>
+        <tr><td>Tubo polínico</td><td>Essencial para fecundação da flor</td></tr>
+        <tr><td>Pegamento</td><td>Reduz queda de frutos novos</td></tr>
+        <tr><td>Estrutura celular</td><td>Age junto com o cálcio</td></tr>
+      </tbody></table>
+      <div class="iwarn">⚠️ Cuidado com excesso — boro é fitotóxico em dose alta. Dose: 500ml/ha por aplicação.</div>
+      <div class="iok">✅ Pode misturar com Potássio K22% — são compatíveis. Aplicar 1–2 dias após defensivos.</div>
+    </div>
   </div>
+
+  <div class="icard">
+    <div class="ih"><div class="iico" style="background:#fef3c7">🎃</div><div class="itit">Potássio K22% — enchimento dos frutos</div><div class="iarr">▼</div></div>
+    <div class="ibody">
+      <div class="itxt">O potássio foliar age mais rápido que o KCl do solo. Na frutificação é essencial para peso, cor e sabor da Angola.</div>
+      <table class="itable"><thead><tr><th>Benefício</th><th>Resultado</th></tr></thead><tbody>
+        <tr><td>Peso dos frutos</td><td>Enchimento mais eficiente</td></tr>
+        <tr><td>Aparência</td><td>Cor e brilho melhores — mais valor comercial</td></tr>
+        <tr><td>Sabor</td><td>Maior teor de açúcar</td></tr>
+        <tr><td>Casca</td><td>Menos rachaduras</td></tr>
+      </tbody></table>
+      <div class="iok">✅ Misturar com Boro 10%. Dose: 3–4 kg/ha. DAP 61 e 75.</div>
+    </div>
+  </div>
+
+  <div class="icard">
+    <div class="ih"><div class="iico" style="background:#fff8f0">🐛</div><div class="itit">Inseticidas — quando usar cada um</div><div class="iarr">▼</div></div>
+    <div class="ibody">
+      <table class="itable"><thead><tr><th>Produto</th><th>Alvo</th><th>Floração</th><th>Limite</th></tr></thead><tbody>
+        <tr><td><strong>Decis 25 EC</strong></td><td>Vaquinha, pulgão, mosca branca</td><td style="color:#c62828">❌ Não</td><td>Até DAP 54</td></tr>
+        <tr><td><strong>Azamax</strong></td><td>Mosca branca, ácaros</td><td style="color:#2d6a4f">✅ Sim</td><td>Todo ciclo</td></tr>
+        <tr><td><strong>Prêmio</strong></td><td>Lagarta, broca</td><td style="color:#2d6a4f">✅ Sim</td><td>Máx 3x</td></tr>
+      </tbody></table>
+      <div class="iwarn">⚠️ Decis sai em 5–7 dias. Parar no DAP 50–54. Na floração APENAS Azamax e Prêmio.</div>
+    </div>
+  </div>
+
+  <div class="icard">
+    <div class="ih"><div class="iico" style="background:#fef9c3">🐝</div><div class="itit">Proteger abelhas — fundamental para a produção</div><div class="iarr">▼</div></div>
+    <div class="ibody">
+      <div class="itxt">A Angola depende de polinização para formar frutos. Sem abelhas a produção pode cair 60–80%. Na floração (DAP 55–74) só produtos seletivos!</div>
+      <table class="itable"><thead><tr><th>Produto</th><th>Risco para abelha</th></tr></thead><tbody>
+        <tr><td>Decis 25 EC</td><td style="color:#c62828">❌ Alto — piretroide</td></tr>
+        <tr><td>Actara / Evidence</td><td style="color:#c62828">❌ Alto — persiste 30–60 dias na planta</td></tr>
+        <tr><td>Azamax</td><td style="color:#2d6a4f">✅ Seguro — nim biológico</td></tr>
+        <tr><td>Prêmio</td><td style="color:#2d6a4f">✅ Seguro — diamida</td></tr>
+        <tr><td>Fungicidas em geral</td><td style="color:#2d6a4f">✅ Todos seguros</td></tr>
+      </tbody></table>
+      <div class="iok">✅ Pulverizar sempre cedo da manhã ou fim de tarde — nunca com sol forte ou flores abertas.</div>
+    </div>
+  </div>
+
+  <div class="icard">
+    <div class="ih"><div class="iico" style="background:#fef3c7">🌱</div><div class="itit">Solo arenoso sem calagem — cuidados</div><div class="iarr">▼</div></div>
+    <div class="ibody">
+      <div class="itxt">Sem calagem o pH pode ser baixo e o solo arenoso lixivia nutrientes rápido com a chuva. Estratégias para compensar neste ciclo:</div>
+      <table class="itable"><thead><tr><th>Problema</th><th>Como compensar</th></tr></thead><tbody>
+        <tr><td>Falta de cálcio</td><td>Nitrato de Cálcio foliar — 3 aplicações</td></tr>
+        <tr><td>Lixiviação de K</td><td>KCl parcelado em 4x — doses menores</td></tr>
+        <tr><td>Lixiviação de N</td><td>Ureia só com chuva prevista</td></tr>
+        <tr><td>pH baixo</td><td>Corrigir na próxima safra com calcário</td></tr>
+      </tbody></table>
+      <div class="iwarn">⚠️ Próxima safra: aplicar 1–2 t/ha de calcário dolomítico 60–90 dias antes do plantio.</div>
+    </div>
+  </div>
+</div>
+
+<!-- RELATORIO -->
+<div class="panel" id="panel-relatorio">
+  <div class="stitle">📊 Relatório da Lavoura</div>
+  <button class="btn-print" onclick="window.print()">🖨️ IMPRIMIR / SALVAR PDF</button>
+  <div class="rsg" id="rStats"></div>
+  <div class="rs"><div class="rh"><h3>🟠 Pulverizações</h3></div>
+    <div class="card" style="border-radius:0 0 11px 11px;margin:0"><table class="rt" id="tPulv"><thead><tr><th>Data</th><th>DAP</th><th>Produto</th><th>Qtd</th><th>Obs</th></tr></thead><tbody></tbody></table></div>
+  </div>
+  <div class="rs" style="margin-top:13px"><div class="rh"><h3>🟢 Adubações</h3></div>
+    <div class="card" style="border-radius:0 0 11px 11px;margin:0"><table class="rt" id="tAdub"><thead><tr><th>Data</th><th>DAP</th><th>Produto</th><th>Qtd</th><th>Custo</th></tr></thead><tbody></tbody></table></div>
+  </div>
+  <div class="rs" style="margin-top:13px"><div class="rh"><h3>💰 Custos</h3></div>
+    <div class="card" style="border-radius:0 0 11px 11px;margin:0"><table class="rt" id="tCusto"><thead><tr><th>Categoria</th><th>Total (R$)</th></tr></thead><tbody></tbody></table></div>
+  </div>
+  <div class="rs" style="margin-top:13px"><div class="rh"><h3>🐛 Observações e Pragas</h3></div>
+    <div class="card" style="border-radius:0 0 11px 11px;margin:0"><table class="rt" id="tObs"><thead><tr><th>Data</th><th>DAP</th><th>Tipo</th><th>Descrição</th></tr></thead><tbody></tbody></table></div>
+  </div>
+  <div class="rs" style="margin-top:13px"><div class="rh"><h3>🎃 Colheita e Venda</h3></div>
+    <div class="card" style="border-radius:0 0 11px 11px;margin:0"><table class="rt" id="tColheita"><thead><tr><th>Data</th><th>DAP</th><th>Tipo</th><th>Qtd</th><th>Valor</th><th>Obs</th></tr></thead><tbody></tbody></table></div>
+  </div>
+  <div style="text-align:center;padding:18px 0 7px;font-size:.68rem;color:#aaa;font-weight:700">Gerado em <span id="rData"></span> — Monitor Abóbora Angola</div>
+</div>
+
+<!-- INSUMOS -->
+<div class="panel" id="panel-insumos">
+  <div class="stitle">🧪 Insumos da Lavoura</div>
+  <div class="sub" style="color:var(--verde)">🟢 Adubação Solo</div>
+  <div class="card" style="margin-bottom:13px"><div class="cb">
+    <div class="inc"><div><div class="inn">NPK 10-30-10</div><div class="int">Plantio — cova</div></div><div><div class="inq">50g/cova</div><div class="inu">94 kg total</div></div></div>
+    <div class="inc"><div><div class="inn">Ureia</div><div class="int">4 coberturas — DAP 15/35/55/80</div></div><div><div class="inq">45g/cova</div><div class="inu">ciclo completo</div></div></div>
+    <div class="inc"><div><div class="inn">KCl</div><div class="int">4 coberturas — DAP 15/35/70/80</div></div><div><div class="inq">90g/cova</div><div class="inu">ciclo completo</div></div></div>
+  </div></div>
+  <div class="sub" style="color:#5b21b6">🟣 Foliares — Sequência Correta</div>
+  <div class="card" style="margin-bottom:13px"><div class="cb">
+    <div class="inc"><div><div class="inn">Boro 10% — Imperial Nutri</div><div class="int">Dia 1 foliar — pode misturar com K22%</div></div><div><div class="inq">500ml/ha</div><div class="inu">3 aplicações</div></div></div>
+    <div class="inc"><div><div class="inn">Potássio K22% — Imperial</div><div class="int">Dia 1 foliar — pode misturar com Boro</div></div><div><div class="inq">3–4kg/ha</div><div class="inu">3 aplicações</div></div></div>
+    <div class="inc" style="border:1.5px solid #fee2e2"><div><div class="inn">Nitrato Cálcio Mais Fértil</div><div class="int">⚠️ SEMPRE SOZINHO — 3–4 dias após Boro+K</div></div><div><div class="inq">2–3kg/ha</div><div class="inu">3 aplicações</div></div></div>
+  </div></div>
+  <div class="sub" style="color:#92400e">🟠 Inseticidas</div>
+  <div class="card" style="margin-bottom:13px"><div class="cb">
+    <div class="inc"><div><div class="inn">Decis 25 EC</div><div class="int">Deltametrina — SOMENTE até DAP 54</div></div><div><div class="inq">⚠️</div><div class="inu">Proibido na floração</div></div></div>
+    <div class="inc"><div><div class="inn">Azamax</div><div class="int">Nim — todo o ciclo ✅</div></div><div><div class="inq">✅</div><div class="inu">Seguro na floração</div></div></div>
+    <div class="inc"><div><div class="inn">Prêmio</div><div class="int">Clorantraniliprole — MÁXIMO 3x</div></div><div><div class="inq">✅</div><div class="inu">Seguro na floração</div></div></div>
+  </div></div>
+  <div class="sub" style="color:#1e40af">🔵 Fungicidas</div>
+  <div class="card"><div class="cb">
+    <div class="inc"><div><div class="inn">Amistar WG</div><div class="int">Azoxistrobina — MÁXIMO 2x ciclo</div></div><div><div class="inq">✅</div><div class="inu">Seguro na floração</div></div></div>
+    <div class="inc"><div><div class="inn">Cuprozeb / Mancozebe</div><div class="int">Proteção geral — todo ciclo</div></div><div><div class="inq">✅</div><div class="inu">Seguro na floração</div></div></div>
+  </div></div>
+</div>
 
 </div><!-- /content -->
+<div class="toast" id="toastEl"></div>
 
-<div class="toast" id="toast"></div>
+<script>
+(function(){
+'use strict';
 
-<script src="app.js"></script>
+// ── STATE ──────────────────────────────────────────────
+var S={plantio:null,area:1.5,covas:1875,espaco:'4 x 2 m',regs:[],done:[]};
+function save(){try{localStorage.setItem('angola4',JSON.stringify(S));}catch(e){}}
+function load(){try{var d=localStorage.getItem('angola4');if(d){S=JSON.parse(d);return true;}}catch(e){}return false;}
+
+// ── DADOS ──────────────────────────────────────────────
+var CAL=[
+  {dap:'0',     t:'ta', p:'NPK 10-30-10',              x:'50g/cova — misturar com terra, 5cm antes da semente',fase:'Plantio'},
+  {dap:'15–20', t:'ta', p:'Ureia',                     x:'15g/cova — 10cm da planta, antes da chuva',fase:'Estabelecimento'},
+  {dap:'15–20', t:'ta', p:'KCl',                       x:'15g/cova — antes da chuva',fase:'Estabelecimento'},
+  {dap:'15–20', t:'ti2',p:'Decis 25 EC',               x:'Vaquinha, mosca branca, pulgão — cedo da manhã',fase:'Estabelecimento'},
+  {dap:'17–22', t:'tf', p:'Cuprozeb / Mancozebe',      x:'1–2 dias após inseticida — prevenção míldio e mancha',fase:'Estabelecimento'},
+  {dap:'35–40', t:'ta', p:'Ureia',                     x:'15g/cova — antes da chuva',fase:'Desenvolvimento'},
+  {dap:'35–40', t:'ta', p:'KCl',                       x:'25g/cova — antes da chuva',fase:'Desenvolvimento'},
+  {dap:'37–42', t:'ti2',p:'Azamax',                    x:'1–2 dias após adubação — ✅ seletivo abelha',fase:'Desenvolvimento'},
+  {dap:'39–44', t:'tf', p:'Amistar WG',                x:'1–2 dias após inseticida — oídio/míldio, 1ª de 2x',fase:'Desenvolvimento'},
+  {dap:'42–46', t:'tfo',p:'Boro 10% + Potássio K22%',  x:'Juntos OK — 2–3 dias após fungicida',fase:'Desenvolvimento'},
+  {dap:'46–50', t:'tfo',p:'Nitrato de Cálcio',         x:'SOZINHO — 3–4 dias após Boro+K. 1ª de 3 aplicações',fase:'Desenvolvimento'},
+  {dap:'50–54', t:'ti2',p:'Decis 25 EC',               x:'⚠️ ÚLTIMA aplicação — antes de florir',fase:'Pré-floração'},
+  {dap:'55–60', t:'ta', p:'Ureia',                     x:'10g/cova — dose reduzida',fase:'Floração'},
+  {dap:'55–60', t:'ta', p:'KCl',                       x:'25g/cova — suporte à floração',fase:'Floração'},
+  {dap:'57–62', t:'ti2',p:'Prêmio (1ª aplic.)',        x:'1–2 dias após adubação — ✅ seletivo abelha, máx 3x',fase:'Floração'},
+  {dap:'59–64', t:'tf', p:'Cuprozeb / Mancozebe',      x:'1–2 dias após inseticida — proteção floração',fase:'Floração'},
+  {dap:'61–65', t:'tfo',p:'Boro 10% + Potássio K22%',  x:'Juntos OK — ⭐ CRÍTICO pegamento das flores',fase:'Floração'},
+  {dap:'65–69', t:'tfo',p:'Nitrato de Cálcio',         x:'SOZINHO — 3–4 dias após Boro+K. 2ª aplicação',fase:'Floração'},
+  {dap:'70–74', t:'ta', p:'KCl',                       x:'25g/cova — enchimento dos frutos',fase:'Frutificação'},
+  {dap:'71–75', t:'ti2',p:'Prêmio (2ª aplic.)',        x:'1–2 dias após adubação — lagarta e broca ✅',fase:'Frutificação'},
+  {dap:'73–77', t:'tf', p:'Amistar WG',                x:'1–2 dias após inseticida — 2ª e última do ciclo',fase:'Frutificação'},
+  {dap:'75–79', t:'tfo',p:'Boro 10% + Potássio K22%',  x:'Juntos OK — peso e qualidade do fruto',fase:'Frutificação'},
+  {dap:'79–83', t:'tfo',p:'Nitrato de Cálcio',         x:'SOZINHO — 3–4 dias após Boro+K. 3ª aplicação',fase:'Frutificação'},
+  {dap:'80–85', t:'ta', p:'Ureia',                     x:'5g/cova — dose mínima final',fase:'Frutificação'},
+  {dap:'80–85', t:'ta', p:'KCl',                       x:'25g/cova — finalização enchimento',fase:'Frutificação'},
+  {dap:'82–86', t:'ti2',p:'Prêmio (3ª aplic.)',        x:'ÚLTIMA — broca do fruto ⚠️ não exceder 3 aplicações',fase:'Frutificação'},
+  {dap:'90–120',t:'tc', p:'Colheita',                  x:'Casca firme, pedúnculo seco e corticoso, som oco',fase:'Colheita'},
+];
+
+var FASES=[
+  {n:'Plantio',         a:0,  b:14,  d:'Semeadura e estabelecimento inicial.',e:'🌱',c:'#2d6a4f',al:['Garantir 5cm de terra entre adubo e semente','Solo deve ter alguma umidade no plantio']},
+  {n:'Estabelecimento', a:15, b:34,  d:'Plantas com 3–4 folhas. Arranque vegetativo.',e:'🌿',c:'#264653',al:['Monitorar mosca branca e pulgão','Decis + Cuprozeb com intervalo 1–2 dias entre eles']},
+  {n:'Desenvolvimento', a:35, b:49,  d:'Ramas crescendo vigorosamente.',e:'🍃',c:'#40916c',al:['Boro+K juntos — Nitrato Ca SOZINHO 3–4 dias depois','Amistar WG — 1ª aplicação do ciclo']},
+  {n:'Pré-floração',    a:50, b:54,  d:'Primeiras flores masculinas aparecendo.',e:'🌼',c:'#b45309',al:['⚠️ ÚLTIMA chance do Decis — abelhas chegando!','Prepare Azamax e Prêmio para a floração']},
+  {n:'Floração',        a:55, b:74,  d:'Fase CRÍTICA — somente inseticidas seletivos!',e:'🌸',c:'#6d28d9',al:['🐝 Só Azamax e Prêmio — NUNCA Decis na floração','⭐ Boro+K juntos — Nitrato Ca SOZINHO 3–4 dias depois']},
+  {n:'Frutificação',    a:75, b:89,  d:'Frutos em desenvolvimento. Foco em K e Ca.',e:'🎃',c:'#c2410c',al:['Nitrato de Cálcio 3ª aplicação — SOZINHO sempre','Prêmio 3ª e ÚLTIMA aplicação — broca do fruto']},
+  {n:'Pré-Colheita',    a:90, b:120, d:'Angola pronta! Verificar maturação.',e:'🚜',c:'#15803d',al:['Casca firme — difícil furar com a unha','Pedúnculo seco e corticoso — som oco ao bater']},
+];
+
+// ── HELPERS ────────────────────────────────────────────
+function getDap(){
+  if(!S.plantio)return 0;
+  var p=new Date(S.plantio+'T00:00:00'),h=new Date();h.setHours(0,0,0,0);
+  return Math.max(0,Math.floor((h-p)/86400000));
+}
+function getFase(d){return FASES.find(function(f){return d>=f.a&&d<=f.b;})||FASES[FASES.length-1];}
+function parseDap(s){s=String(s);if(s.indexOf('–')>=0){var p=s.split('–').map(Number);return[p[0],p[1]];}var n=parseInt(s);return[n,n];}
+function fmt(s){if(!s)return'—';return new Date(s+'T00:00:00').toLocaleDateString('pt-BR');}
+function moeda(v){if(!v&&v!==0)return'—';return'R$ '+parseFloat(v).toLocaleString('pt-BR',{minimumFractionDigits:2});}
+function toast(m){var t=document.getElementById('toastEl');t.textContent=m;t.classList.add('on');setTimeout(function(){t.classList.remove('on');},2600);}
+function el(id){return document.getElementById(id);}
+function qs(s){return document.querySelector(s);}
+
+// ── TABS ───────────────────────────────────────────────
+function showTab(name){
+  document.querySelectorAll('.tab').forEach(function(t){t.classList.toggle('on',t.dataset.tab===name);});
+  document.querySelectorAll('.panel').forEach(function(p){p.classList.remove('on');});
+  var panel=el('panel-'+name);
+  if(panel)panel.classList.add('on');
+  if(name==='historico')renderHist();
+  if(name==='calendario')renderCal();
+  if(name==='relatorio')renderRel();
+}
+
+// ── INIT ───────────────────────────────────────────────
+function init(){
+  // Tab events
+  document.querySelectorAll('.tab').forEach(function(t){
+    t.addEventListener('click',function(){showTab(this.dataset.tab);});
+  });
+
+  // Indicações toggle
+  document.querySelectorAll('.icard').forEach(function(card){
+    card.querySelector('.ih').addEventListener('click',function(){card.classList.toggle('open');});
+  });
+
+  // Filtro histórico
+  el('filtro').addEventListener('change',renderHist);
+
+  // Botões
+  el('btnStart').addEventListener('click',iniciar);
+  el('btnReset').addEventListener('click',resetar);
+  el('btnSalvar').addEventListener('click',salvar);
+  el('btn-print') && el('btn-print').addEventListener('click',function(){window.print();});
+
+  var ok=load();
+  setTimeout(function(){
+    var l=el('loading');l.classList.add('off');
+    setTimeout(function(){l.style.display='none';},400);
+    if(!ok||!S.plantio){
+      el('sData').valueAsDate=new Date();
+      el('setup').classList.add('on');
+    }else{update();}
+  },600);
+}
+
+function iniciar(){
+  var d=el('sData').value;
+  if(!d){toast('⚠️ Informe a data de plantio!');return;}
+  var btn=el('btnStart');btn.disabled=true;btn.textContent='Salvando...';
+  S.plantio=d;
+  S.area=parseFloat(el('sArea').value)||1.5;
+  S.covas=parseInt(el('sCovas').value)||1875;
+  S.espaco=el('sEspaco').value||'4 x 2 m';
+  S.regs=S.regs||[];S.done=S.done||[];
+  save();
+  el('setup').classList.remove('on');
+  btn.disabled=false;btn.textContent='🌱 INICIAR MONITORAMENTO';
+  update();toast('🌱 Lavoura configurada!');
+}
+
+function resetar(){
+  if(!confirm('Reconfigurar? Registros mantidos.'))return;
+  S.plantio=null;save();
+  el('sData').valueAsDate=new Date();
+  el('sArea').value=S.area;el('sCovas').value=S.covas;el('sEspaco').value=S.espaco;
+  el('setup').classList.add('on');
+}
+
+// ── UPDATE ─────────────────────────────────────────────
+function update(){
+  if(!S.plantio)return;
+  var dap=getDap(),fase=getFase(dap);
+  var rest=Math.max(0,100-dap),pct=Math.min(100,Math.round(dap/100*100));
+  var pulvs=S.regs.filter(function(r){return r.tipo&&r.tipo.indexOf('Pulverização')>=0;});
+
+  el('dapNum').textContent=dap;
+  el('pArea').textContent=S.area+' ha';
+  el('pCovas').textContent=Number(S.covas).toLocaleString('pt-BR')+' covas';
+  el('pEspaco').textContent=S.espaco;
+  el('pPlantio').textContent='🌱 '+fmt(S.plantio);
+  var dc=new Date(S.plantio+'T00:00:00');dc.setDate(dc.getDate()+100);
+  el('pColheita').textContent='🎃 ~'+dc.toLocaleDateString('pt-BR');
+
+  el('stDap').textContent=dap;el('stRest').textContent=rest;
+  el('stReg').textContent=S.regs.length;el('stPulv').textContent=pulvs.length;
+  el('pFill').style.width=pct+'%';el('pPct').textContent=pct+'%';
+
+  var fb=el('faseBox');
+  fb.setAttribute('data-e',fase.e);
+  fb.style.background='linear-gradient(135deg,'+fase.c+',#264653)';
+  el('faseNome').textContent=fase.e+' '+fase.n;
+  el('faseDesc').textContent=fase.d;
+  el('faseAlts').innerHTML=fase.al.map(function(a){return'<div class="alt">⚡ '+a+'</div>';}).join('');
+
+  renderProx(dap);renderCal(dap);
+  el('rData').valueAsDate=new Date();el('rDap').value=dap;
+}
+
+function renderProx(dap){
+  var prox=CAL.filter(function(c){var r=parseDap(c.dap);return r[1]>=dap&&r[0]<=dap+15;}).slice(0,5);
+  var e=el('proxEl');
+  if(!prox.length){e.innerHTML='<div class="empty"><div class="ei">✅</div><p>Sem ações nos próximos dias</p></div>';return;}
+  e.innerHTML=prox.map(function(c){return'<div class="ci '+c.t+'" style="margin-bottom:7px"><div class="cd">DAP '+c.dap+'</div><div class="cp">'+c.p+'</div><div class="cx">'+c.x+'</div></div>';}).join('');
+}
+
+// ── CALENDÁRIO ─────────────────────────────────────────
+function renderCal(dap){
+  if(dap===undefined)dap=getDap();
+  var e=el('calEl'),html='',last='';
+  CAL.forEach(function(c,i){
+    if(c.fase!==last){last=c.fase;html+='<div class="clf">'+c.fase.toUpperCase()+'</div>';}
+    var done=S.done.indexOf(i)>=0,r=parseDap(c.dap),now=!done&&dap>=r[0]&&dap<=r[1];
+    html+='<div class="ci '+c.t+(done?' done':'')+(now?' now':'')+'" data-i="'+i+'">';
+    html+='<div class="cd">DAP '+c.dap+'</div><div class="cp">'+c.p+'</div><div class="cx">'+c.x+'</div>';
+    html+='<div class="ck" data-i="'+i+'"></div></div>';
+  });
+  e.innerHTML=html;
+  e.querySelectorAll('.ck').forEach(function(ck){
+    ck.addEventListener('click',function(ev){ev.stopPropagation();toggleDone(parseInt(this.dataset.i));});
+  });
+}
+
+function toggleDone(i){
+  var idx=S.done.indexOf(i);
+  if(idx>=0)S.done.splice(idx,1);else S.done.push(i);
+  save();renderCal();
+  toast(S.done.indexOf(i)>=0?'✓ Marcado como realizado!':'Desmarcado');
+}
+
+// ── SALVAR REGISTRO ────────────────────────────────────
+function salvar(){
+  var tipo=el('rTipo').value,prod=el('rProd').value.trim();
+  if(!tipo){toast('⚠️ Selecione o tipo!');return;}
+  if(!prod){toast('⚠️ Informe o produto!');return;}
+  var btn=el('btnSalvar');btn.disabled=true;btn.textContent='Salvando...';
+  S.regs.unshift({
+    id:Date.now(),data:el('rData').value,dap:parseInt(el('rDap').value)||0,
+    tipo:tipo,produto:prod,
+    qtd:el('rQtd').value||null,un:el('rUn').value,
+    val:el('rVal').value||null,obs:el('rObs').value.trim()||null
+  });
+  save();
+  el('rTipo').value='';el('rProd').value='';el('rQtd').value='';el('rVal').value='';el('rObs').value='';
+  btn.disabled=false;btn.textContent='💾 SALVAR REGISTRO';
+  update();toast('✅ Registro salvo!');
+  setTimeout(function(){showTab('historico');},500);
+}
+
+// ── HISTÓRICO ──────────────────────────────────────────
+function renderHist(){
+  var f=el('filtro').value,list=f?S.regs.filter(function(r){return r.tipo===f;}):S.regs,e=el('histEl');
+  if(!list.length){e.innerHTML='<div class="empty"><div class="ei">📋</div><p>Nenhum registro</p></div>';return;}
+  var cores={'Adubação Solo':'bv','Adubação Foliar':'br','Pulverização - Inseticida':'ba','Pulverização - Fungicida':'bb','Colheita':'bv','Venda':'bv','Mão de Obra':'bo'};
+  e.innerHTML=list.map(function(r){
+    var bc=cores[r.tipo]||'ba';
+    var det=[r.qtd?r.qtd+' '+(r.un||''):'',r.val?'R$ '+parseFloat(r.val).toFixed(2):'',r.obs||''].filter(Boolean).join(' · ');
+    return'<div class="hi"><button class="hdel" data-id="'+r.id+'">🗑</button>'+
+      '<div class="ht"><div class="hd">📅 '+fmt(r.data)+'</div><div class="hdp">DAP '+r.dap+'</div></div>'+
+      '<span class="hti '+bc+'">'+r.tipo+'</span>'+
+      '<div class="hp">'+r.produto+'</div>'+
+      (det?'<div class="hx">'+det+'</div>':'')+
+      '</div>';
+  }).join('');
+  e.querySelectorAll('.hdel').forEach(function(b){
+    b.addEventListener('click',function(){delReg(parseInt(this.dataset.id));});
+  });
+}
+
+function delReg(id){
+  if(!confirm('Excluir este registro?'))return;
+  S.regs=S.regs.filter(function(r){return r.id!==id;});
+  save();update();renderHist();toast('🗑 Excluído');
+}
+
+// ── RELATÓRIO ──────────────────────────────────────────
+function renderRel(){
+  var regs=S.regs,dap=getDap();
+  el('rData').textContent=new Date().toLocaleString('pt-BR');
+  var tot=regs.reduce(function(s,r){return s+(parseFloat(r.val)||0);},0);
+  var pulvs=regs.filter(function(r){return r.tipo&&r.tipo.indexOf('Pulverização')>=0;});
+  var adubs=regs.filter(function(r){return r.tipo&&r.tipo.indexOf('Adubação')>=0;});
+
+  el('rStats').innerHTML=
+    '<div class="rsc"><div class="v">'+regs.length+'</div><div class="l">Registros</div></div>'+
+    '<div class="rsc"><div class="v" style="color:var(--laranja)">'+pulvs.length+'</div><div class="l">Pulverizações</div></div>'+
+    '<div class="rsc"><div class="v" style="color:var(--roxo)">'+adubs.length+'</div><div class="l">Adubações</div></div>'+
+    '<div class="rsc"><div class="v" style="color:var(--azul)">'+dap+'</div><div class="l">DAP atual</div></div>'+
+    '<div class="rsc"><div class="v" style="color:var(--terra);font-size:.95rem">'+moeda(tot)+'</div><div class="l">Custo total</div></div>'+
+    '<div class="rsc"><div class="v" style="color:var(--verde2)">'+S.done.length+'</div><div class="l">Concluídos</div></div>';
+
+  function rows(arr,cols,empty){
+    if(!arr.length)return'<tr><td colspan="'+cols+'" style="text-align:center;color:#aaa;padding:14px">'+empty+'</td></tr>';
+    return arr.map(function(r){return'<tr>'+cols.map(function(fn){return'<td>'+fn(r)+'</td>';}).join('')+'</tr>';}).join('');
+  }
+
+  qs('#tPulv tbody').innerHTML=rows(pulvs,5,'Nenhuma pulverização registrada',[
+    function(r){return fmt(r.data);},function(r){return r.dap;},
+    function(r){return'<strong>'+r.produto+'</strong>';},
+    function(r){return r.qtd?r.qtd+' '+(r.un||''):'—';},
+    function(r){return r.obs||'—';}
+  ]);
+
+  qs('#tAdub tbody').innerHTML=rows(adubs,5,'Nenhuma adubação registrada',[
+    function(r){return fmt(r.data);},function(r){return r.dap;},
+    function(r){return'<strong>'+r.produto+'</strong>';},
+    function(r){return r.qtd?r.qtd+' '+(r.un||''):'—';},
+    function(r){return r.val?moeda(r.val):'—';}
+  ]);
+
+  var custos={};regs.forEach(function(r){if(r.val)custos[r.tipo]=(custos[r.tipo]||0)+parseFloat(r.val);});
+  var ce=Object.entries(custos).sort(function(a,b){return b[1]-a[1];});
+  qs('#tCusto tbody').innerHTML=ce.length
+    ?ce.map(function(e){return'<tr><td>'+e[0]+'</td><td><strong>'+moeda(e[1])+'</strong></td></tr>';}).join('')+'<tr style="background:var(--verde-bg)"><td><strong>TOTAL</strong></td><td><strong>'+moeda(tot)+'</strong></td></tr>'
+    :'<tr><td colspan="2" style="text-align:center;color:#aaa;padding:14px">Nenhum custo registrado</td></tr>';
+
+  var obs=regs.filter(function(r){return r.tipo&&(r.tipo.indexOf('Observação')>=0||r.tipo.indexOf('Praga')>=0||r.tipo.indexOf('Doença')>=0);});
+  qs('#tObs tbody').innerHTML=rows(obs,4,'Nenhuma observação registrada',[
+    function(r){return fmt(r.data);},function(r){return r.dap;},function(r){return r.tipo;},
+    function(r){return r.produto+(r.obs?' — '+r.obs:'');}
+  ]);
+
+  var col=regs.filter(function(r){return r.tipo==='Colheita'||r.tipo==='Venda';});
+  var tv=col.filter(function(r){return r.tipo==='Venda';}).reduce(function(s,r){return s+(parseFloat(r.val)||0);},0);
+  qs('#tColheita tbody').innerHTML=col.length
+    ?col.map(function(r){return'<tr><td>'+fmt(r.data)+'</td><td>'+r.dap+'</td><td>'+r.tipo+'</td><td>'+(r.qtd?r.qtd+' '+(r.un||''):'—')+'</td><td>'+(r.val?moeda(r.val):'—')+'</td><td style="font-size:.68rem">'+(r.obs||'—')+'</td></tr>';}).join('')+(tv>0?'<tr style="background:var(--verde-bg)"><td colspan="4"><strong>RECEITA TOTAL</strong></td><td><strong>'+moeda(tv)+'</strong></td><td></td></tr>':'')
+    :'<tr><td colspan="6" style="text-align:center;color:#aaa;padding:14px">Nenhuma colheita registrada</td></tr>';
+}
+
+// ── START ──────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded',init);
+})();
+</script>
 </body>
 </html>
