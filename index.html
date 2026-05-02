@@ -12,7 +12,7 @@ body{background:var(--creme2);font-family:'Nunito',sans-serif;min-height:100vh}
 
 /* LOADING */
 #loading{position:fixed;inset:0;background:var(--terra);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:999;transition:opacity .4s}
-#loading.off{opacity:0;pointer-events:none}
+#loading.off{opacity:0;pointer-events:none;display:none}
 .l-logo{font-family:'Bebas Neue',cursive;font-size:3rem;color:var(--amarelo2);letter-spacing:3px;margin-bottom:6px}
 .l-sub{color:var(--verde3);font-size:.8rem;font-weight:700;letter-spacing:1px;margin-bottom:24px}
 .spin{width:34px;height:34px;border:3px solid rgba(255,255,255,.1);border-top-color:var(--verde3);border-radius:50%;animation:spin .8s linear infinite}
@@ -436,7 +436,7 @@ body{background:var(--creme2);font-family:'Nunito',sans-serif;min-height:100vh}
   <div class="rs" style="margin-top:13px"><div class="rh"><h3>🎃 Colheita e Venda</h3></div>
     <div class="card" style="border-radius:0 0 11px 11px;margin:0"><table class="rt" id="tColheita"><thead><tr><th>Data</th><th>DAP</th><th>Tipo</th><th>Qtd</th><th>Valor</th><th>Obs</th></tr></thead><tbody></tbody></table></div>
   </div>
-  <div style="text-align:center;padding:18px 0 7px;font-size:.68rem;color:#aaa;font-weight:700">Gerado em <span id="rData"></span> — Monitor Abóbora Angola</div>
+  <div style="text-align:center;padding:18px 0 7px;font-size:.68rem;color:#aaa;font-weight:700">Gerado em <span id="rGerado"></span> — Monitor Abóbora Angola</div>
 </div>
 
 <!-- INSUMOS -->
@@ -473,6 +473,15 @@ body{background:var(--creme2);font-family:'Nunito',sans-serif;min-height:100vh}
 <script>
 (function(){
 'use strict';
+
+window.addEventListener('error',function(ev){
+  try{
+    var l=document.getElementById('loading');
+    if(l){l.classList.add('off');l.style.display='none';}
+    var t=document.getElementById('toastEl');
+    if(t){t.textContent='⚠️ Erro no app: '+(ev.message||'verifique o console');t.classList.add('on');}
+  }catch(e){}
+});
 
 // ── STATE ──────────────────────────────────────────────
 var S={plantio:null,area:1.5,covas:1875,espaco:'4 x 2 m',regs:[],done:[]};
@@ -709,7 +718,7 @@ function delReg(id){
 // ── RELATÓRIO ──────────────────────────────────────────
 function renderRel(){
   var regs=S.regs,dap=getDap();
-  el('rData').textContent=new Date().toLocaleString('pt-BR');
+  el('rGerado').textContent=new Date().toLocaleString('pt-BR');
   var tot=regs.reduce(function(s,r){return s+(parseFloat(r.val)||0);},0);
   var pulvs=regs.filter(function(r){return r.tipo&&r.tipo.indexOf('Pulverização')>=0;});
   var adubs=regs.filter(function(r){return r.tipo&&r.tipo.indexOf('Adubação')>=0;});
@@ -722,9 +731,9 @@ function renderRel(){
     '<div class="rsc"><div class="v" style="color:var(--terra);font-size:.95rem">'+moeda(tot)+'</div><div class="l">Custo total</div></div>'+
     '<div class="rsc"><div class="v" style="color:var(--verde2)">'+S.done.length+'</div><div class="l">Concluídos</div></div>';
 
-  function rows(arr,cols,empty){
-    if(!arr.length)return'<tr><td colspan="'+cols+'" style="text-align:center;color:#aaa;padding:14px">'+empty+'</td></tr>';
-    return arr.map(function(r){return'<tr>'+cols.map(function(fn){return'<td>'+fn(r)+'</td>';}).join('')+'</tr>';}).join('');
+  function rows(arr,colspan,empty,fns){
+    if(!arr.length)return'<tr><td colspan="'+colspan+'" style="text-align:center;color:#aaa;padding:14px">'+empty+'</td></tr>';
+    return arr.map(function(r){return'<tr>'+fns.map(function(fn){return'<td>'+fn(r)+'</td>';}).join('')+'</tr>';}).join('');
   }
 
   qs('#tPulv tbody').innerHTML=rows(pulvs,5,'Nenhuma pulverização registrada',[
